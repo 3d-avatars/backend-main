@@ -30,7 +30,6 @@ func (controller *mediaController) FileUpload(ctx echo.Context) error {
 			http.StatusInternalServerError,
 			&dtos.MediaDto{
 				Message: "The data type expected to be an image",
-				Data:    &echo.Map{},
 			},
 		)
 	}
@@ -41,7 +40,6 @@ func (controller *mediaController) FileUpload(ctx echo.Context) error {
 			http.StatusInternalServerError,
 			&dtos.MediaDto{
 				Message: "Failed to retrieve file from header",
-				Data:    &echo.Map{},
 			},
 		)
 	}
@@ -57,7 +55,6 @@ func (controller *mediaController) FileUpload(ctx echo.Context) error {
 			http.StatusInternalServerError,
 			&dtos.MediaDto{
 				Message: "An internal server error occured when saving the image.",
-				Data:    &echo.Map{},
 			},
 		)
 	}
@@ -66,7 +63,6 @@ func (controller *mediaController) FileUpload(ctx echo.Context) error {
 		http.StatusOK,
 		&dtos.MediaDto{
 			Message: "Image uploaded successfully",
-			Data:    &echo.Map{},
 		},
 	)
 }

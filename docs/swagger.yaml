@@ -1,0 +1,34 @@
+basePath: /3d-avatar/api
+definitions:
+  dtos.MediaDto:
+    properties:
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+  license:
+    name: Apache 2.0
+  title: 3D Avatar API
+  version: "1.0"
+paths:
+  /v1/3d-model-generation/input-image:
+    post:
+      consumes:
+      - multipart/form-data
+      operationId: 3d-model-generation-post-input-image
+      parameters:
+      - description: Input image
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.MediaDto'
+      summary: Upload input image for generating 3d model
+swagger: "2.0"

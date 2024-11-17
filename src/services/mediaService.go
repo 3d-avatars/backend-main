@@ -20,7 +20,7 @@ func NewMediaUpload() MediaUpload {
 
 func (*mediaUpload) FileUpload(file *models.MediaFile) error {
 	imagePath := fmt.Sprintf(
-		"/Users/danilov6083/GolandProjects/backend-main/imaginary_database/%s",
+		"/Users/danilov6083/GolandProjects/backend-main/imaginary-database/%s",
 		file.Filename,
 	)
 
