@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"3d-avatar/backend-main/src/models"
+	"3d-avatar/backend-main/src/data/models"
 )
 
 type MediaUpload interface {

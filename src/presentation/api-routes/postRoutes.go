@@ -1,8 +1,8 @@
 package apiroutes
 
 import (
-	"3d-avatar/backend-main/src/controllers"
-	_ "3d-avatar/backend-main/src/dtos"
+	"3d-avatar/backend-main/src/presentation/controllers"
+	_ "3d-avatar/backend-main/src/domain/dtos"
 
 	"github.com/labstack/echo/v4"
 )

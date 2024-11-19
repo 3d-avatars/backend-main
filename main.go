@@ -2,9 +2,9 @@ package main
 
 import (
 	_ "3d-avatar/backend-main/docs"
-	apiRoutes "3d-avatar/backend-main/src/api-routes"
-	"3d-avatar/backend-main/src/controllers"
-	"3d-avatar/backend-main/src/services"
+	apiRoutes "3d-avatar/backend-main/src/presentation/api-routes"
+	"3d-avatar/backend-main/src/presentation/controllers"
+	"3d-avatar/backend-main/src/domain/services"
 	"fmt"
 	"github.com/swaggo/echo-swagger"
 
@@ -25,7 +25,7 @@ const (
 func main() {
 	router := echo.New()
 
-	router.Logger.SetLevel(log.ERROR)
+	router.Logger.SetLevel(log.INFO)
 	router.Use(middleware.Logger())
 
 	baseUrlRouter := router.Group(fmt.Sprintf("/%s", BaseUrl))
@@ -38,7 +38,7 @@ func main() {
 }
 
 func setupSwagger(router *echo.Group) {
-	router.GET("/swagger/*", echoSwagger.WrapHandler)
+	router.GET("/swagger", echoSwagger.WrapHandler)
 }
 
 func setupHandlers(router *echo.Group) {

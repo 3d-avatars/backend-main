@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"3d-avatar/backend-main/src/dtos"
-	"3d-avatar/backend-main/src/models"
-	"3d-avatar/backend-main/src/services"
+	"3d-avatar/backend-main/src/domain/dtos"
+	"3d-avatar/backend-main/src/data/models"
+	"3d-avatar/backend-main/src/domain/services"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
