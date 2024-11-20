@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS tasks;
+
+DROP FUNCTION IF EXISTS set_updated_at();
