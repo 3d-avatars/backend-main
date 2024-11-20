@@ -8,23 +8,23 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type MediaController interface {
+type Generate3dModelController interface {
 	UploadInputImage(ctx echo.Context) error
 	GetTaskStatus(ctx echo.Context) error
 	GetTaskResultFile(ctx echo.Context) error
 }
 
-type mediaController struct {
-	mediaService services.MediaService
+type meshController struct {
+	mediaService services.Generate3dModelService
 }
 
-func NewMediaController(service services.MediaService) MediaController {
-	return &mediaController{
+func NewGenerate3dModelController(service services.Generate3dModelService) Generate3dModelController {
+	return &meshController{
 		mediaService: service,
 	}
 }
 
-func (controller *mediaController) UploadInputImage(ctx echo.Context) error {
+func (controller *meshController) UploadInputImage(ctx echo.Context) error {
 	fileHeader, err := ctx.FormFile("image")
 	if err != nil {
 		return ctx.JSON(
@@ -46,7 +46,11 @@ func (controller *mediaController) UploadInputImage(ctx echo.Context) error {
 	}
 	defer file.Close()
 
-	requestUuid, err := controller.mediaService.UploadFile(ctx.Request().Context(), &file)
+	requestUuid, err := controller.mediaService.UploadFile(
+		ctx.Request().Context(),
+		&file,
+		&fileHeader.Filename,
+	)
 
 	if err != nil {
 		return ctx.JSON(
@@ -66,7 +70,7 @@ func (controller *mediaController) UploadInputImage(ctx echo.Context) error {
 	)
 }
 
-func (controller *mediaController) GetTaskStatus(ctx echo.Context) error {
+func (controller *meshController) GetTaskStatus(ctx echo.Context) error {
 	taskUuid := ctx.Param("id")
 
 	state, err := controller.mediaService.GetTaskStatus(ctx.Request().Context(), &taskUuid)
@@ -88,12 +92,17 @@ func (controller *mediaController) GetTaskStatus(ctx echo.Context) error {
 	)
 }
 
-func (controller *mediaController) GetTaskResultFile(ctx echo.Context) error {
+func (controller *meshController) GetTaskResultFile(ctx echo.Context) error {
 	taskUuid := ctx.Param("id")
 
-	resultFilePath, err := controller.mediaService.
-		GetResultFilePath(ctx.Request().Context(), &taskUuid)
+	resultFilePath, err := controller.mediaService.GetResultFilePath(ctx.Request().Context(), &taskUuid)
 	if err != nil {
+		return ctx.JSON(
+			http.StatusInternalServerError,
+			&dtos.GetResultFileResponse{
+				Message: "Failed to read file",
+			},
+		)
 
 	}
 

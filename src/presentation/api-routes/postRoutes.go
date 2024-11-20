@@ -9,7 +9,7 @@ import (
 
 func SetupPostRoutes(
 	router *echo.Group,
-	mediaController controllers.MediaController,
+	mediaController controllers.Generate3dModelController,
 ) {
 	uploadInputImage(router, mediaController)
 }
@@ -23,7 +23,7 @@ func SetupPostRoutes(
 // @Router		/v1/3d-model-generation/input-image [post]
 func uploadInputImage(
 	router *echo.Group,
-	mediaController controllers.MediaController,
+	mediaController controllers.Generate3dModelController,
 ) {
 	router.POST(
 		"/3d-model-generation/input-image",

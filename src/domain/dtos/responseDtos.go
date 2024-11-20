@@ -9,3 +9,7 @@ type GetTaskStatusResponse struct {
 	Message string `json:"message"`
 	Status  string `json:"status"`
 }
+
+type GetResultFileResponse struct {
+	Message string `json:"message"`
+}

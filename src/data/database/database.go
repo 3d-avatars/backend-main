@@ -23,9 +23,6 @@ func CreateDBConnection(url string, log echo.Logger) (*sqlx.DB, error) {
 	pgCfg.Tracer = pgLog
 
 	nativeDB := stdlib.OpenDB(*pgCfg)
-	if err != nil {
-		return nil, err
-	}
 
 	nativeDB.SetMaxOpenConns(10)
 	nativeDB.SetMaxIdleConns(5)

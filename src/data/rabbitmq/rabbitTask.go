@@ -6,9 +6,17 @@ import (
 )
 
 type RabbitTask struct {
-	Uuid     string
-	Datetime string
-	File     *multipart.File
+	Uuid     string `json:"uuid"`
+	Datetime string `json:"datetime"`
+	Filename string `json:"filename"`
+	File     *multipart.File `file:"file"`
+}
+
+type RabbitResponse struct {
+	Uuid string `json:"uuid"`
+	Datetime string `json:"datetime"`
+	Filename string `json:"filename"`
+	File []byte `file:"file"`
 }
 
 func (t *RabbitTask) ToDbEntity() database.TaskEntity {

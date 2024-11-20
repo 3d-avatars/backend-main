@@ -13,6 +13,7 @@ COPY . .
 
 RUN go build -o /app/backend-main ./main.go
 RUN go build -o /app/migrator ./migrator/main.go
+RUN go build -o /app/worker ./worker/main.go
 
 FROM alpine
 
@@ -27,4 +28,4 @@ COPY --from=builder /app /app
 
 WORKDIR /app
 
-CMD ./migrator && ./banner
+CMD ./migrator && ./backend-main

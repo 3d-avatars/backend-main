@@ -9,7 +9,7 @@ import (
 
 func SetupGetRoutes(
 	router *echo.Group,
-	mediaController controllers.MediaController,
+	mediaController controllers.Generate3dModelController,
 ) {
 	getTaskStatus(router, mediaController)
 	getResultFile(router, mediaController)
@@ -24,7 +24,7 @@ func SetupGetRoutes(
 // @Router		/v1//3d-model-generation/task/:id/status [get]
 func getTaskStatus(
 	router *echo.Group,
-	mediaController controllers.MediaController,
+	mediaController controllers.Generate3dModelController,
 ) {
 	router.GET(
 		"/3d-model-generation/task/:id/status",
@@ -41,7 +41,7 @@ func getTaskStatus(
 // @Router		/v1//3d-model-generation/task/:id/status [get]
 func getResultFile(
 	router *echo.Group,
-	mediaController controllers.MediaController,
+	mediaController controllers.Generate3dModelController,
 ) {
 	router.GET(
 		"/3d-model-generation/task/:id/result",

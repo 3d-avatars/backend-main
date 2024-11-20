@@ -12,6 +12,7 @@ import (
 
 type DatabaseRepository interface {
 	InsertTask(ctx context.Context, task *TaskEntity) error
+	UpdateTaskWithFilePath(ctx context.Context, uuid *string, filePath *string) error
 	GetTaskStatus(ctx context.Context, uuid *string) (TaskState, error)
 	GetResultFilePath(ctx context.Context, uuid *string) (string, error)
 }
@@ -43,6 +44,28 @@ func (repo *databaseRepository) InsertTask(
 	)
 	if err != nil {
 		return fmt.Errorf("failed to insert task: %w", err)
+	}
+	return nil
+}
+
+func (repo *databaseRepository) UpdateTaskWithFilePath(
+	ctx context.Context,
+	uuid *string, 
+	filePath *string,
+) error {
+	const updateTaskQuery = `
+	UPDATE tasks 
+	SET result_file_path = $1
+	WHERE request_uuid = $2
+	`
+	_, err := repo.db.ExecContext(
+		ctx,
+		updateTaskQuery,
+		filePath,
+		uuid,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update task with uuid %s and path %s", *uuid, *filePath)
 	}
 	return nil
 }

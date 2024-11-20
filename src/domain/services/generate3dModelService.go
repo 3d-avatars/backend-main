@@ -12,30 +12,31 @@ import (
 	"github.com/google/uuid"
 )
 
-type MediaService interface {
-	UploadFile(ctx context.Context, file *multipart.File) (string, error)
+type Generate3dModelService interface {
+	UploadFile(ctx context.Context, file *multipart.File, filename *string) (string, error)
 	GetTaskStatus(ctx context.Context, taskUuid *string) (string, error)
 	GetResultFilePath(ctx context.Context, taskUuid *string) (string, error)
 }
 
-type mediaService struct {
+type meshService struct {
 	databaseRepository database.DatabaseRepository
 	rabbitMqRepostiry  rabbitmq.RabbitMqRepository
 }
 
-func NewMediaService(
+func NewGenerate3dModelService(
 	databaseRepository database.DatabaseRepository,
 	rabbitMqRepostiry rabbitmq.RabbitMqRepository,
-) MediaService {
-	return &mediaService{
+) Generate3dModelService {
+	return &meshService{
 		databaseRepository: databaseRepository,
 		rabbitMqRepostiry:  rabbitMqRepostiry,
 	}
 }
 
-func (service *mediaService) UploadFile(
+func (service *meshService) UploadFile(
 	ctx context.Context,
 	file *multipart.File,
+	filename *string,
 ) (string, error) {
 	rabbitTask := rabbitmq.RabbitTask{
 		Uuid:     uuid.New().String(),
@@ -59,7 +60,7 @@ func (service *mediaService) UploadFile(
 	return requestUuid, nil
 }
 
-func (service *mediaService) GetTaskStatus(
+func (service *meshService) GetTaskStatus(
 	ctx context.Context,
 	uuid *string,
 ) (string, error) {
@@ -83,7 +84,7 @@ func (service *mediaService) GetTaskStatus(
 	return taskState, nil
 }
 
-func (service *mediaService) GetResultFilePath(
+func (service *meshService) GetResultFilePath(
 	ctx context.Context,
 	taskUuid *string,
 ) (string, error) {

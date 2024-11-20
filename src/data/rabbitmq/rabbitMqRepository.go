@@ -13,6 +13,7 @@ import (
 type RabbitMqRepository interface {
 	SendTask(ctx context.Context, task *RabbitTask) error
 	ReceiveResults(resultsCh *chan []byte)
+	Connection() *amqp.Connection
 }
 
 type rabbitMqRepository struct {
@@ -66,13 +67,13 @@ func (repo *rabbitMqRepository) SendTask(ctx context.Context, task *RabbitTask) 
 func (repo *rabbitMqRepository) ReceiveResults(resultsCh *chan []byte) {
 	ch, err := repo.connection.Channel()
 	if err != nil {
-		log.Fatalf("failed create channel for queue declaring %w", err)
+		log.Fatalf("failed create channel for queue declaring %v", err)
 	}
 	defer ch.Close()
 
 	queue, err := declareQueue(ch, &repo.tasksResultQueue)
 	if err != nil {
-		log.Fatalf("Failed declare queue for %s: %w", repo.tasksResultQueue, err)
+		log.Fatalf("Failed declare queue for %s: %v", repo.tasksResultQueue, err)
 	}
 
 	msgs, err := ch.Consume(
@@ -84,6 +85,9 @@ func (repo *rabbitMqRepository) ReceiveResults(resultsCh *chan []byte) {
 		false,
 		nil,
 	)
+	if err != nil {
+		log.Fatalf("Failed to consume from queue %s: %v", repo.tasksResultQueue, err)
+	}
 
 	var forever chan struct{}
 
@@ -94,8 +98,10 @@ func (repo *rabbitMqRepository) ReceiveResults(resultsCh *chan []byte) {
 		}
 	}()
 
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+	log.Printf(" [*] Worker is waiting for messages.")
 	<-forever
 }
 
-
+func (repo *rabbitMqRepository) Connection() *amqp.Connection {
+	return repo.connection
+}

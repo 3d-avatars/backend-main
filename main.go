@@ -35,6 +35,7 @@ func main() {
 	router := echo.New()
 
 	router.Logger.SetLevel(log.INFO)
+	router.Logger.SetHeader("${time_rfc3339} ${level} BACKEND")
 	router.Use(middleware.Logger())
 
 	baseUrlRouter := router.Group(fmt.Sprintf("/%s", BaseUrl))
@@ -67,8 +68,8 @@ func setupHandlers(
 	databaseRepository := database.NewDatabaseRepository(db)
 	rabbitMqRepository := rabbitmq.NewRabbitMqRepository(config.QueueCfg)
 
-	mediaService := services.NewMediaService(databaseRepository, rabbitMqRepository)
-	mediaController := controllers.NewMediaController(mediaService)
+	mediaService := services.NewGenerate3dModelService(databaseRepository, rabbitMqRepository)
+	mediaController := controllers.NewGenerate3dModelController(mediaService)
 
 	apiRoutes.SetupGetRoutes(router, mediaController)
 	apiRoutes.SetupPostRoutes(router, mediaController)

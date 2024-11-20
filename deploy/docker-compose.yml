@@ -2,7 +2,8 @@ services:
   postgres:
     image: postgres:14
     env_file:
-      - ../.env
+      - path: ../.env
+        required: true
     hostname: ${POSTGRES_HOST}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}" ]
@@ -11,9 +12,23 @@ services:
       retries: 2
     ports:
       - "${POSTGRES_PORT}:5432"
+    restart: "on-failure"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - main-backend-net
+  
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    env_file:
+      - ../.env
+    hostname: ${RABBITMQ_HOST}
+    ports:
+      - "${RABBITMQ_PORT_MANAGEMENT}:15672"
+      - "${RABBITMQ_PORT}:5672"
     restart: "on-failure"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - main-backend-net
 
@@ -23,25 +38,34 @@ services:
       dockerfile: ./build/Dockerfile
     env_file:
       - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    restart: "on-failure"
     ports:
       - "${APP_PORT}:${APP_PORT}"
-    restart: "on-failure"
-    networks:
-      - "main-backend-net"
-
-  rabbitmq:
-    image: rabbitmq:3.10.7-management
-    env_file:
-      - ../.env
-    hostname: ${RABBITMQ_HOST}
-    restart: "on-failure"
-    ports:
-      - "${RABBITMQ_PORT_MANAGEMENT}:15672"
-      - "${RABBITMQ_PORT}:5672"
     networks:
       - main-backend-net
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+
+  backend-worker:
+    build:
+      context: ../
+      dockerfile: ./build/Dockerfile
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      banner:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    restart: "on-failure"
+    networks:
+      - main-backend-net
+    command: ["./worker"]
 
 volumes:
   postgres_data:
