@@ -2,11 +2,15 @@ package main
 
 import (
 	_ "3d-avatar/backend-main/docs"
+	"3d-avatar/backend-main/src/configs"
+	"3d-avatar/backend-main/src/data/database"
+	"3d-avatar/backend-main/src/data/rabbitmq"
+	"3d-avatar/backend-main/src/domain/services"
 	apiRoutes "3d-avatar/backend-main/src/presentation/api-routes"
 	"3d-avatar/backend-main/src/presentation/controllers"
-	"3d-avatar/backend-main/src/domain/services"
 	"fmt"
-	"github.com/swaggo/echo-swagger"
+
+	echoSwagger "github.com/swaggo/echo-swagger"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -18,11 +22,16 @@ const (
 	ApiV1   = "v1"
 )
 
-//	@title			3D Avatar API
-//	@version		1.0
-//	@license.name	Apache 2.0
-//	@BasePath		/3d-avatar/api
+// @title			3D Avatar API
+// @version		1.0
+// @license.name	Apache 2.0
+// @BasePath		/3d-avatar/api
 func main() {
+	config, err := configs.New()
+	if err != nil {
+		log.Fatalf("Failed to create config: %v", err)
+	}
+
 	router := echo.New()
 
 	router.Logger.SetLevel(log.INFO)
@@ -32,19 +41,35 @@ func main() {
 	apiV1Router := baseUrlRouter.Group(fmt.Sprintf("/%s", ApiV1))
 
 	setupSwagger(baseUrlRouter)
-	setupHandlers(apiV1Router)
+	setupHandlers(config, apiV1Router, router.Logger)
 
-	router.Logger.Fatal(router.Start(":8080"))
+	router.Logger.Fatal(
+		router.Start(
+			fmt.Sprintf("%s:%d", config.ServerCfg.Host, config.ServerCfg.Port),
+		),
+	)
 }
 
 func setupSwagger(router *echo.Group) {
 	router.GET("/swagger", echoSwagger.WrapHandler)
 }
 
-func setupHandlers(router *echo.Group) {
-	mediaService := services.NewMediaUpload()
+func setupHandlers(
+	config *configs.AppConfig,
+	router *echo.Group,
+	logger echo.Logger,
+) {
+	db, err := database.CreateDBConnection(config.DatabaseCfg.PGUrl, logger)
+	if err != nil {
+		logger.Fatal("Failed to create postgres connectin: %v", err)
+	}
+
+	databaseRepository := database.NewDatabaseRepository(db)
+	rabbitMqRepository := rabbitmq.NewRabbitMqRepository(config.QueueCfg)
+
+	mediaService := services.NewMediaService(databaseRepository, rabbitMqRepository)
 	mediaController := controllers.NewMediaController(mediaService)
 
-	apiRoutes.SetupGetRoutes(router)
+	apiRoutes.SetupGetRoutes(router, mediaController)
 	apiRoutes.SetupPostRoutes(router, mediaController)
 }

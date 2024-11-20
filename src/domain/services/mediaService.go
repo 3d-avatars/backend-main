@@ -1,38 +1,96 @@
 package services
 
 import (
-	"fmt"
-	"io"
+	"context"
+	"mime/multipart"
 	"os"
+	"time"
 
-	"3d-avatar/backend-main/src/data/models"
+	"3d-avatar/backend-main/src/data/database"
+	"3d-avatar/backend-main/src/data/rabbitmq"
+
+	"github.com/google/uuid"
 )
 
-type MediaUpload interface {
-	FileUpload(file *models.MediaFile) error
+type MediaService interface {
+	UploadFile(ctx context.Context, file *multipart.File) (string, error)
+	GetTaskStatus(ctx context.Context, taskUuid *string) (string, error)
+	GetResultFilePath(ctx context.Context, taskUuid *string) (string, error)
 }
 
-type mediaUpload struct{}
-
-func NewMediaUpload() MediaUpload {
-	return &mediaUpload{}
+type mediaService struct {
+	databaseRepository database.DatabaseRepository
+	rabbitMqRepostiry  rabbitmq.RabbitMqRepository
 }
 
-func (*mediaUpload) FileUpload(file *models.MediaFile) error {
-	imagePath := fmt.Sprintf(
-		"/Users/danilov6083/GolandProjects/backend-main/imaginary-database/%s",
-		file.Filename,
-	)
+func NewMediaService(
+	databaseRepository database.DatabaseRepository,
+	rabbitMqRepostiry rabbitmq.RabbitMqRepository,
+) MediaService {
+	return &mediaService{
+		databaseRepository: databaseRepository,
+		rabbitMqRepostiry:  rabbitMqRepostiry,
+	}
+}
 
-	dstFile, err := os.Create(imagePath)
+func (service *mediaService) UploadFile(
+	ctx context.Context,
+	file *multipart.File,
+) (string, error) {
+	rabbitTask := rabbitmq.RabbitTask{
+		Uuid:     uuid.New().String(),
+		Datetime: time.Now().Format(time.DateTime),
+		File:     file,
+	}
+
+	requestUuid := rabbitTask.Uuid
+	err := service.rabbitMqRepostiry.SendTask(ctx, &rabbitTask)
 	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
-
-	if _, err = io.Copy(dstFile, file.File); err != nil {
-		return err
+		return requestUuid, err
 	}
 
-	return nil
+	dbEntity := rabbitTask.ToDbEntity()
+	dbEntity.State = database.TaskInProgress
+
+	if err := service.databaseRepository.InsertTask(ctx, &dbEntity); err != nil {
+		return requestUuid, err
+	}
+
+	return requestUuid, nil
+}
+
+func (service *mediaService) GetTaskStatus(
+	ctx context.Context,
+	uuid *string,
+) (string, error) {
+	state, err := service.databaseRepository.GetTaskStatus(ctx, uuid)
+	if err != nil {
+		return "", err
+	}
+
+	var taskState string
+	switch state {
+	case database.TaskInitial:
+		taskState = "initial"
+	case database.TaskInProgress:
+		taskState = "in_progress"
+	case database.TaskSuccess:
+		taskState = "success"
+	case database.TaskFailed:
+		taskState = "failed"
+	}
+
+	return taskState, nil
+}
+
+func (service *mediaService) GetResultFilePath(
+	ctx context.Context,
+	taskUuid *string,
+) (string, error) {
+	filepath, err := service.databaseRepository.GetResultFilePath(ctx, taskUuid)
+	if _, existErr := os.Stat(filepath); err != nil || existErr != nil {
+		return "", err
+	}
+
+	return filepath, nil
 }

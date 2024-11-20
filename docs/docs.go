@@ -18,6 +18,35 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/v1//3d-model-generation/task/:id/status": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "model/gltf-binary"
+                ],
+                "summary": "Get result .glb file",
+                "operationId": "3d-model-generation-get-result-file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID of task generated after uploading input image",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/3d-model-generation/input-image": {
             "post": {
                 "consumes": [
@@ -41,7 +70,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dtos.MediaDto"
+                            "$ref": "#/definitions/dtos.UploadInputImageResponse"
                         }
                     }
                 }
@@ -49,10 +78,24 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dtos.MediaDto": {
+        "dtos.GetTaskStatusResponse": {
             "type": "object",
             "properties": {
                 "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dtos.UploadInputImageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "request_uuid": {
                     "type": "string"
                 }
             }

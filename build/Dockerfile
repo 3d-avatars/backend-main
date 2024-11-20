@@ -12,10 +12,13 @@ RUN go mod download
 COPY . .
 
 RUN go build -o /app/backend-main ./main.go
+RUN go build -o /app/migrator ./migrator/main.go
 
 FROM alpine
 
 RUN apk update --no-cache && apk add --no-cache ca-certificates
+
+ENV TZ=Europe/Moscow
 
 ENV APP_PORT=8080
 ENV APP_HOST=0.0.0.0
@@ -24,4 +27,4 @@ COPY --from=builder /app /app
 
 WORKDIR /app
 
-CMD ./backend-main
+CMD ./migrator && ./banner
