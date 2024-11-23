@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:14
     env_file:
-      - path: ../.env
+      - path: .env
         required: true
     hostname: ${POSTGRES_HOST}
     healthcheck:
@@ -21,8 +21,14 @@ services:
   rabbitmq:
     image: rabbitmq:3.10.7-management
     env_file:
-      - ../.env
+      - path: .env
+        required: true
     hostname: ${RABBITMQ_HOST}
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
     ports:
       - "${RABBITMQ_PORT_MANAGEMENT}:15672"
       - "${RABBITMQ_PORT}:5672"
@@ -37,7 +43,8 @@ services:
       context: ../
       dockerfile: ./build/Dockerfile
     env_file:
-      - ../.env
+      - path: .env
+        required: true
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,6 +53,8 @@ services:
     restart: "on-failure"
     ports:
       - "${APP_PORT}:${APP_PORT}"
+    volumes:
+      - backend-shared-volume:/mnt/backend-shared
     networks:
       - main-backend-net
 
@@ -54,24 +63,26 @@ services:
       context: ../
       dockerfile: ./build/Dockerfile
     env_file:
-      - ../.env
+      - path: .env
+        required: true
     depends_on:
       postgres:
         condition: service_healthy
-      banner:
-        condition: service_started
       rabbitmq:
         condition: service_started
     restart: "on-failure"
+    volumes:
+      - backend-shared-volume:/mnt/backend-shared
     networks:
       - main-backend-net
-    command: ["./worker"]
+    command: "./worker"
 
 volumes:
   postgres_data:
   rabbitmq-data:
+  backend-shared-volume:
 
 networks:
-  banner-net:
+  main-backend-net:
     driver: bridge
     name: main-backend-net

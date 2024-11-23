@@ -18,7 +18,36 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/v1//3d-model-generation/task/:id/status": {
+        "/v1/3d-model-generation/input-image": {
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Upload input image for generating 3d model",
+                "operationId": "3d-model-generation-post-input-image",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Input image",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UploadInputImageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/3d-model-generation/task/:id/result": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -47,22 +76,22 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/3d-model-generation/input-image": {
-            "post": {
+        "/v1/3d-model-generation/task/:id/status": {
+            "get": {
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Upload input image for generating 3d model",
-                "operationId": "3d-model-generation-post-input-image",
+                "summary": "Get status of generating 3d model task",
+                "operationId": "3d-model-generation-task-status",
                 "parameters": [
                     {
-                        "type": "file",
-                        "description": "Input image",
-                        "name": "image",
-                        "in": "formData",
+                        "type": "string",
+                        "description": "UUID of task generated after uploading input image",
+                        "name": "id",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -70,7 +99,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dtos.UploadInputImageResponse"
+                            "$ref": "#/definitions/dtos.GetTaskStatusResponse"
                         }
                     }
                 }

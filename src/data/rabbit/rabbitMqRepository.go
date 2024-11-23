@@ -1,4 +1,4 @@
-package rabbitmq
+package rabbit
 
 import (
 	"3d-avatar/backend-main/src/configs"
@@ -12,7 +12,7 @@ import (
 
 type RabbitMqRepository interface {
 	SendTask(ctx context.Context, task *RabbitTask) error
-	ReceiveResults(resultsCh *chan []byte)
+	ReceiveResults() (<-chan amqp.Delivery, error)
 	Connection() *amqp.Connection
 }
 
@@ -22,8 +22,8 @@ type rabbitMqRepository struct {
 	tasksResultQueue string
 }
 
-func NewRabbitMqRepository(cfg configs.QueueConfig) RabbitMqRepository {
-	repo, err := setupRMQ(cfg)
+func NewRabbitMqRepository(cfg configs.QueueConfig, clientName string) RabbitMqRepository {
+	repo, err := setupRMQ(cfg, clientName)
 	if err != nil {
 		log.Fatalf("Failed to create rabbitmq repo: %v", err)
 	}
@@ -52,9 +52,9 @@ func (repo *rabbitMqRepository) SendTask(ctx context.Context, task *RabbitTask) 
 		"",
 		queue.Name,
 		true,
-		true,
+		false,
 		amqp.Publishing{
-			ContentType: "image/png",
+			ContentType: "application/json",
 			Body:        bytes,
 		},
 	)
@@ -64,7 +64,7 @@ func (repo *rabbitMqRepository) SendTask(ctx context.Context, task *RabbitTask) 
 	return nil
 }
 
-func (repo *rabbitMqRepository) ReceiveResults(resultsCh *chan []byte) {
+func (repo *rabbitMqRepository) ReceiveResults() (<-chan amqp.Delivery, error) {
 	ch, err := repo.connection.Channel()
 	if err != nil {
 		log.Fatalf("failed create channel for queue declaring %v", err)
@@ -86,20 +86,9 @@ func (repo *rabbitMqRepository) ReceiveResults(resultsCh *chan []byte) {
 		nil,
 	)
 	if err != nil {
-		log.Fatalf("Failed to consume from queue %s: %v", repo.tasksResultQueue, err)
+		return nil, fmt.Errorf("failed to consume from queue %s: %v", repo.tasksResultQueue, err)
 	}
-
-	var forever chan struct{}
-
-	go func() {
-		for msg := range msgs {
-			log.Printf("Received a message: %s", msg.Body)
-			*resultsCh <- msg.Body
-		}
-	}()
-
-	log.Printf(" [*] Worker is waiting for messages.")
-	<-forever
+	return msgs, nil
 }
 
 func (repo *rabbitMqRepository) Connection() *amqp.Connection {

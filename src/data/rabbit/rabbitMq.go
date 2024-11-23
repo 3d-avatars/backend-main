@@ -1,4 +1,4 @@
-package rabbitmq
+package rabbit
 
 import (
 	"3d-avatar/backend-main/src/configs"
@@ -7,14 +7,20 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func setupRMQ(cfg configs.QueueConfig) (RabbitMqRepository, error) {
-	connection, err := amqp.Dial(
-		fmt.Sprintf("amqp://%s:%s@%s:%s/", cfg.User, cfg.Password, cfg.Host, cfg.Port),
-	)
+func setupRMQ(cfg configs.QueueConfig, clientName string) (RabbitMqRepository, error) {
+	connectionCfg := amqp.Config{
+        Properties: amqp.Table{
+            "connection_name": clientName,
+			"vm_memory_high_watermark.absolute": 52428800,
+			// "vm_memory_high_watermark": map[string]string{
+			// 	"absolute": "52428800",
+			// },
+        },
+    }
+    connection, err := amqp.DialConfig(cfg.RabbitMqUrl, connectionCfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed create connection to rabbitmq: %w", err)
 	}
-
 	ch, err := connection.Channel()
 	if err != nil {
 		return nil, fmt.Errorf("failed create channel for queue declaring %w", err)
@@ -43,6 +49,6 @@ func declareQueue(ch *amqp.Channel, queueName *string) (amqp.Queue, error) {
 		false,
 		false,
 		false,
-		nil,
+		amqp.Table{"x-max-length-bytes": 52428800},
 	)
 }

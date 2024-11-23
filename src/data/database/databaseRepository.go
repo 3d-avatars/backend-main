@@ -50,7 +50,7 @@ func (repo *databaseRepository) InsertTask(
 
 func (repo *databaseRepository) UpdateTaskWithFilePath(
 	ctx context.Context,
-	uuid *string, 
+	uuid *string,
 	filePath *string,
 ) error {
 	const updateTaskQuery = `

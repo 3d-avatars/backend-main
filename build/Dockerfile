@@ -28,4 +28,6 @@ COPY --from=builder /app /app
 
 WORKDIR /app
 
+COPY --from=builder /build/migrations ./migrations
+
 CMD ./migrator && ./backend-main

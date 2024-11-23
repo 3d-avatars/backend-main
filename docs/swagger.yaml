@@ -21,25 +21,6 @@ info:
   title: 3D Avatar API
   version: "1.0"
 paths:
-  /v1//3d-model-generation/task/:id/status:
-    get:
-      consumes:
-      - application/json
-      operationId: 3d-model-generation-get-result-file
-      parameters:
-      - description: UUID of task generated after uploading input image
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - model/gltf-binary
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: file
-      summary: Get result .glb file
   /v1/3d-model-generation/input-image:
     post:
       consumes:
@@ -59,4 +40,42 @@ paths:
           schema:
             $ref: '#/definitions/dtos.UploadInputImageResponse'
       summary: Upload input image for generating 3d model
+  /v1/3d-model-generation/task/:id/result:
+    get:
+      consumes:
+      - application/json
+      operationId: 3d-model-generation-get-result-file
+      parameters:
+      - description: UUID of task generated after uploading input image
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - model/gltf-binary
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Get result .glb file
+  /v1/3d-model-generation/task/:id/status:
+    get:
+      consumes:
+      - application/json
+      operationId: 3d-model-generation-task-status
+      parameters:
+      - description: UUID of task generated after uploading input image
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.GetTaskStatusResponse'
+      summary: Get status of generating 3d model task
 swagger: "2.0"

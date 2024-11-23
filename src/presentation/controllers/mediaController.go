@@ -46,9 +46,19 @@ func (controller *meshController) UploadInputImage(ctx echo.Context) error {
 	}
 	defer file.Close()
 
+	fileContent := make([]byte, fileHeader.Size)
+	if _, err := file.Read(fileContent); err != nil {
+		return ctx.JSON(
+			http.StatusInternalServerError,
+			&dtos.UploadInputImageResponse{
+				Message: "Failed to read file content",
+			},
+		)
+	}
+
 	requestUuid, err := controller.mediaService.UploadFile(
 		ctx.Request().Context(),
-		&file,
+		&fileContent,
 		&fileHeader.Filename,
 	)
 

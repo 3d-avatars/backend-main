@@ -2,30 +2,29 @@ package services
 
 import (
 	"context"
-	"mime/multipart"
 	"os"
 	"time"
 
 	"3d-avatar/backend-main/src/data/database"
-	"3d-avatar/backend-main/src/data/rabbitmq"
+	"3d-avatar/backend-main/src/data/rabbit"
 
 	"github.com/google/uuid"
 )
 
 type Generate3dModelService interface {
-	UploadFile(ctx context.Context, file *multipart.File, filename *string) (string, error)
+	UploadFile(ctx context.Context, fileContent *[]byte, filename *string) (string, error)
 	GetTaskStatus(ctx context.Context, taskUuid *string) (string, error)
 	GetResultFilePath(ctx context.Context, taskUuid *string) (string, error)
 }
 
 type meshService struct {
 	databaseRepository database.DatabaseRepository
-	rabbitMqRepostiry  rabbitmq.RabbitMqRepository
+	rabbitMqRepostiry  rabbit.RabbitMqRepository
 }
 
 func NewGenerate3dModelService(
 	databaseRepository database.DatabaseRepository,
-	rabbitMqRepostiry rabbitmq.RabbitMqRepository,
+	rabbitMqRepostiry rabbit.RabbitMqRepository,
 ) Generate3dModelService {
 	return &meshService{
 		databaseRepository: databaseRepository,
@@ -35,13 +34,14 @@ func NewGenerate3dModelService(
 
 func (service *meshService) UploadFile(
 	ctx context.Context,
-	file *multipart.File,
+	fileContent *[]byte,
 	filename *string,
 ) (string, error) {
-	rabbitTask := rabbitmq.RabbitTask{
+	rabbitTask := rabbit.RabbitTask{
 		Uuid:     uuid.New().String(),
 		Datetime: time.Now().Format(time.DateTime),
-		File:     file,
+		Filename: *filename,
+		FileContent:     fileContent,
 	}
 
 	requestUuid := rabbitTask.Uuid

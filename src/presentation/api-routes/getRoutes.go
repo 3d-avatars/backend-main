@@ -21,7 +21,7 @@ func SetupGetRoutes(
 // @Produce		json
 // @Param		id	path	string	true	"UUID of task generated after uploading input image"
 // @Success		200		{object}	dtos.GetTaskStatusResponse
-// @Router		/v1//3d-model-generation/task/:id/status [get]
+// @Router		/v1/3d-model-generation/task/:id/status [get]
 func getTaskStatus(
 	router *echo.Group,
 	mediaController controllers.Generate3dModelController,
@@ -38,7 +38,7 @@ func getTaskStatus(
 // @Produce		model/gltf-binary
 // @Param		id	path	string	true	"UUID of task generated after uploading input image"
 // @Success		200		{file}	file
-// @Router		/v1//3d-model-generation/task/:id/status [get]
+// @Router		/v1/3d-model-generation/task/:id/result [get]
 func getResultFile(
 	router *echo.Group,
 	mediaController controllers.Generate3dModelController,

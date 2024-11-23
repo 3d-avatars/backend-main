@@ -18,18 +18,15 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	PGUrl           string `env:"PG_URL" env-required:"true"`
+	PostgresUrl     string `env:"PG_URL" env-required:"true"`
 	MigrationsPath  string `env:"MIGRATIONS_PATH" env-required:"true"`
 	MigrationsTable string `env:"MIGRATIONS_TABLE" env-required:"true"`
 }
 
 type QueueConfig struct {
-	Host              string `env:"RABBITMQ_HOST" env-required:"true"`
-	Port              string `env:"RABBITMQ_PORT" env-required:"true"`
-	User              string `env:"RABBITMQ_DEFAULT_USER" env-required:"true"`
-	Password          string `env:"RABBITMQ_DEFAULT_PASS" env-required:"true"`
+	RabbitMqUrl       string `env:"RABBITMQ_URL" env-required:"true"`
 	TasksQueue        string `env:"RABBITMQ_TASKS_QUEUE" env-required:"true"`
-	TasksResultsQueue string `env:"RABBITMQ_TASK_RESULTS_QUEUE" env-required:"true"`
+	TasksResultsQueue string `env:"RABBITMQ_TASKS_RESULTS_QUEUE" env-required:"true"`
 }
 
 func New() (*AppConfig, error) {

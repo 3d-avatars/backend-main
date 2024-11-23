@@ -18,27 +18,26 @@ func main() {
 		log.Fatalf("Config is required: %v", err)
 	}
 
-	log.Printf("Tring to migrate from %s to %s\n", cfg.DatabaseCfg.MigrationsPath, cfg.DatabaseCfg.PGUrl)
+	log.Printf("Trying to migrate from %s to %s\n", cfg.DatabaseCfg.MigrationsPath, cfg.DatabaseCfg.PostgresUrl)
 
-	m, err := migrate.New(
+	migrator, err := migrate.New(
 		fmt.Sprintf("file://%s", cfg.DatabaseCfg.MigrationsPath),
 		fmt.Sprintf("%s?x-migrations-table=%s&sslmode=disable",
-			cfg.DatabaseCfg.PGUrl,
+			cfg.DatabaseCfg.PostgresUrl,
 			cfg.DatabaseCfg.MigrationsTable,
 		),
 	)
-
 	if err != nil {
-		log.Fatalf("failed to create migrations: %v", err)
+		log.Fatalf("Failed to create migrations: %v", err)
 	}
 
-	if err := m.Up(); err != nil {
+	if err := migrator.Up(); err != nil {
 		if errors.Is(err, migrate.ErrNoChange) {
-			fmt.Println("no migrations to apply")
+			fmt.Println("No migrations to apply")
 			return
 		}
 		log.Fatal(err)
 	}
 
-	log.Println("migrations successfully applied")
+	log.Println("Migrations successfully applied")
 }
