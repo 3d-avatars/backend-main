@@ -1,28 +1,20 @@
+version: '3'
+
 services:
   postgres:
-    image: postgres:14
+    image: 'postgres:14'
+    restart: always
     env_file:
-      - path: .env
-        required: true
-    hostname: ${POSTGRES_HOST}
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}" ]
-      interval: 5s
-      timeout: 5s
-      retries: 2
+      - .env
     ports:
-      - "${POSTGRES_PORT}:5432"
-    restart: "on-failure"
+      - '${POSTGRES_PORT}:${POSTGRES_PORT}'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - main-backend-net
-  
+      - postgres-data:/var/lib/postgresql
+
   rabbitmq:
     image: rabbitmq:3.10.7-management
     env_file:
-      - path: .env
-        required: true
+      .env
     hostname: ${RABBITMQ_HOST}
     healthcheck:
       test: rabbitmq-diagnostics -q ping
@@ -35,54 +27,34 @@ services:
     restart: "on-failure"
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - main-backend-net
 
-  backend-main:
+  main-service:
     build:
-      context: ../
-      dockerfile: ./build/Dockerfile
+      context: .
+      dockerfile: ./Dockerfile
     env_file:
-      - path: .env
-        required: true
+      - ./.env
+    volumes:
+      - ./.:/app
     depends_on:
-      postgres:
-        condition: service_healthy
+      db:
+        condition: service_started
       rabbitmq:
         condition: service_started
-    restart: "on-failure"
     ports:
       - "${APP_PORT}:${APP_PORT}"
-    volumes:
-      - backend-shared-volume:/mnt/backend-shared
-    networks:
-      - main-backend-net
 
-  backend-worker:
+  worker:
     build:
-      context: ../
-      dockerfile: ./build/Dockerfile
+      context: .
+      dockerfile: ./Dockerfile
     env_file:
-      - path: .env
-        required: true
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_started
-    restart: "on-failure"
+      - ./.env
     volumes:
-      - backend-shared-volume:/mnt/backend-shared
-    networks:
-      - main-backend-net
-    command: "./worker"
+      - ./.:/app
+    command: ["python3", "cmd/worker/main.py"]
+
 
 volumes:
-  postgres_data:
+  postgres-data:
   rabbitmq-data:
-  backend-shared-volume:
-
-networks:
-  main-backend-net:
-    driver: bridge
-    name: main-backend-net
