@@ -1,0 +1,60 @@
+version: '3'
+
+services:
+  postgres:
+    image: 'postgres:14'
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - '${POSTGRES_PORT}:${POSTGRES_PORT}'
+    volumes:
+      - postgres-data:/var/lib/postgresql
+
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    env_file:
+      .env
+    hostname: ${RABBITMQ_HOST}
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    ports:
+      - "${RABBITMQ_PORT_MANAGEMENT}:15672"
+      - "${RABBITMQ_PORT}:5672"
+    restart: "on-failure"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  main-service:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    env_file:
+      - ./.env
+    volumes:
+      - ./.:/app
+    depends_on:
+      db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    env_file:
+      - ./.env
+    volumes:
+      - ./.:/app
+    command: ["python3", "cmd/worker/main.py"]
+
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
