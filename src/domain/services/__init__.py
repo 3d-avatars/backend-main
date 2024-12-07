@@ -1,7 +1,7 @@
-from .base_service import BaseService
-from .task_service import TaskService
+from src.domain.services.task_controller import TaskController
+from src.domain.services.task_controller_impl import TaskControllerImpl
 
 __all__ = [
-    "BaseService",
-    "TaskService",
+    "TaskController",
+    "TaskControllerImpl"
 ]

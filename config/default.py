@@ -48,20 +48,20 @@ class DefaultSettings(BaseSettings):
     @property
     def database_settings(self) -> dict:
         """
-        Get all settings for connection with database.
+        Get all settings for connection with tasks.
         """
         return {
-            "database": self.POSTGRES_DB,
             "user": self.POSTGRES_USER,
             "password": self.POSTGRES_PASSWORD,
             "host": self.POSTGRES_HOST,
             "port": self.POSTGRES_PORT,
+            "database": self.POSTGRES_DB,
         }
 
     @property
     def database_uri(self) -> str:
         """
-        Get uri for connection with database.
+        Get uri for connection with tasks.
         """
         return "postgresql+asyncpg://{user}:{password}@{host}:{port}/{database}".format(
             **self.database_settings,
@@ -70,7 +70,7 @@ class DefaultSettings(BaseSettings):
     @property
     def database_uri_sync(self) -> str:
         """
-        Get uri for connection with database.
+        Get uri for connection with tasks.
         """
         return "postgresql://{user}:{password}@{host}:{port}/{database}".format(
             **self.database_settings,

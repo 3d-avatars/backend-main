@@ -1,5 +1,5 @@
-from .default import DefaultSettings
-from .utils import get_settings
+from config.default import DefaultSettings
+from config.utils import get_settings
 
 
 __all__ = [
