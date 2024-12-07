@@ -1,5 +1,5 @@
-from src.database.session import SessionManager
-from src.constants import SESSION_DB_VAR_NAME
+from src.data.database.connection import SessionManager
+from src.utils.constants import SESSION_DB_VAR_NAME
 
 
 class SessionProviderMixin:
