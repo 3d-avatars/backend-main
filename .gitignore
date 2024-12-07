@@ -1,8 +1,10 @@
 .idea
+.vscode
 .env
 log_conf.yaml
 test_*
 venv
+.venv
 
 .DS_Store
 __pycache__

@@ -17,10 +17,10 @@ env: ##@ Copy env from example files
 	cp log_conf_example.yaml log_conf.yaml
 
 run: ##@ Local service launch
-	python3 main.py
+	python3 cmd/service/main.py
 
 deploy: ##@ Set up docker environment
-	docker-compose up -d --remove-orphans
+	docker-compose -f ./deployment/docker-compose.yml up --build --remove-orphans
 
 revision:  ##@Database Create new revision file automatically with prefix (ex. 2022_01_01_14cs34f_message.py)
 	alembic revision --autogenerate

@@ -22,6 +22,7 @@ class DefaultSettings(BaseSettings):
     # Postgres
     POSTGRES_DB: str = environ.get("POSTGRES_DB", "stream_contoller_db")
     POSTGRES_HOST: str = environ.get("POSTGRES_HOST", "localhost")
+    POSTGRES_HOST_FOR_MIGRATIONS = environ.get("POSTGRES_HOST_FOR_MIGRATIONS", "localhost")
     POSTGRES_USER: str = environ.get("POSTGRES_USER", "user")
     POSTGRES_PORT: int = int(environ.get("POSTGRES_PORT", "5432")[-4:])
     POSTGRES_PASSWORD: str = environ.get("POSTGRES_PASSWORD", "hackme")
