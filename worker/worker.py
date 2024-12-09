@@ -34,10 +34,10 @@ class Worker:
         decoded_task = TaskEntity.model_validate_json(message.body.decode())
         result_file_metadata = decoded_task.result_file_metadata
 
-        if decoded_task.status == TaskStatus.PENDING:
+        if decoded_task.status == TaskStatus.IN_PROGRESS:
             await self.task_repository.update_task(
                 request_uuid=decoded_task.request_uuid,
-                status=TaskStatus.PENDING
+                status=TaskStatus.IN_PROGRESS
             )
             logger.info(f"Updated task status {decoded_task.request_uuid} to PENDING")
         elif result_file_metadata:

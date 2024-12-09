@@ -105,6 +105,11 @@ class TaskControllerImpl(TaskController):
             task_entity.model_dump_json()
         )
 
+        await self.task_repository.update_task(
+            request_uuid=request_uuid,
+            status=TaskStatus.PENDING
+        )
+
         return CreateTaskResponse(
             request_uuid=str(request_uuid),
             source_file_path=str(source_file_path),
