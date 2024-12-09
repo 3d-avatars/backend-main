@@ -88,7 +88,10 @@ class TaskControllerImpl(TaskController):
                 bucket=self.settings.MINIO_IMAGES_BUCKET,
                 file_name=minio_file_name,
             ),
-            result_file_metadata=None,
+            result_file_metadata=MinioMetadata(
+                bucket=self.settings.MINIO_GLB_BUCKET,
+                file_name="",
+            ),
             status=TaskStatus.INITIAL
         )
 

@@ -39,7 +39,7 @@ class Worker:
                 request_uuid=decoded_task.request_uuid,
                 status=TaskStatus.IN_PROGRESS
             )
-            logger.info(f"Updated task status {decoded_task.request_uuid} to PENDING")
+            logger.info(f"Updated task status {decoded_task.request_uuid} to IN_PROGRESS")
         elif result_file_metadata:
             metadata = await self.minio_metadata_repository.create_metadata(
                 bucket=result_file_metadata.bucket,

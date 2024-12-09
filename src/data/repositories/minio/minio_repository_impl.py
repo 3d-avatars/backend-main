@@ -1,8 +1,6 @@
 import logging
 from typing import BinaryIO, Optional
 
-from asyncpg.pgproto.pgproto import timedelta
-
 from src.data.minio import MinioManager
 from src.data.repositories.minio.minio_repository import MinioRepository
 
@@ -46,7 +44,6 @@ class MinioRepositoryImpl(MinioRepository):
             response = self.manager.client.presigned_get_object(
                 bucket_name=target_bucket,
                 object_name=file_name,
-                expires=timedelta(days=1),
             )
             logger.info(f"URL for downloading file {response} from bucket {target_bucket}")
         except Exception as e:
