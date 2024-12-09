@@ -1,0 +1,59 @@
+import logging
+from typing import BinaryIO, Optional
+
+from asyncpg.pgproto.pgproto import timedelta
+
+from src.data.minio import MinioManager
+from src.data.repositories.minio.minio_repository import MinioRepository
+
+logger = logging.getLogger(__name__)
+
+
+class MinioRepositoryImpl(MinioRepository):
+
+    def __init__(self):
+        self.manager = MinioManager()
+
+    async def upload_file(
+        self,
+        target_bucket: str,
+        file_name: str,
+        file_content: BinaryIO,
+        file_size: int,
+        content_type: str,
+    ) -> str:
+        self.manager.client.put_object(
+            bucket_name=target_bucket,
+            object_name=file_name,
+            data=file_content,
+            length=file_size,
+            content_type=content_type,
+        )
+        logger.info(f"Uploaded file {file_name} to bucket {target_bucket}")
+        return await self.download_file(
+            target_bucket=target_bucket,
+            file_name=file_name,
+        )
+
+    async def download_file(
+        self,
+        target_bucket: str,
+        file_name: str,
+    ) -> str:
+        response: Optional[str] = None
+
+        try:
+            response = self.manager.client.presigned_get_object(
+                bucket_name=target_bucket,
+                object_name=file_name,
+                expires=timedelta(days=1),
+            )
+            logger.info(f"URL for downloading file {response} from bucket {target_bucket}")
+        except Exception as e:
+            logger.error(f"Failed to download file with exception {e}")
+
+        if not response:
+            return ""
+
+        http_options_index = response.find("?")
+        return response[:http_options_index] if http_options_index != -1 else response

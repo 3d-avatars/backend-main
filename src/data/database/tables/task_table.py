@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Enum
-from sqlalchemy.dialects.postgresql import TEXT, UUID
+from sqlalchemy import Column, Enum, ForeignKey, BIGINT
+from sqlalchemy.dialects.postgresql import UUID
 
-from src.data.database.tables.base_table import BaseTable
+from src.data.database.tables import BaseTable
 from src.domain.entities import TaskStatus
 
 
@@ -24,16 +24,20 @@ class TaskTable(BaseTable):
         default=TaskStatus.INITIAL
     )
 
-    source_file_path = Column(
-        "source_file_path",
-        TEXT,
+    source_file_metadata_id = Column(
+        "source_file_metadata_id",
+        BIGINT,
+        ForeignKey("minio_metadata.id"),
         nullable=False,
-        doc="S3 Url for generated model",
+        unique=True,
+        doc="S3 metadata for source file",
     )
 
-    result_file_path = Column(
-        "result_file_path",
-        TEXT,
+    result_file_metadata_id = Column(
+        "result_file_metadata_id",
+        BIGINT,
+        ForeignKey("minio_metadata.id"),
         nullable=True,
-        doc="S3 Url for generated model",
+        unique=True,
+        doc="S3 metadata for result file",
     )

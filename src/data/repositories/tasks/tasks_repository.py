@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.entities import TaskEntity
+from src.data.database.tables import TaskTable
 
 
 class TasksRepository(ABC):
@@ -13,7 +13,7 @@ class TasksRepository(ABC):
     async def get_tasks(
         self,
         session: AsyncSession = None,
-    ) -> List[TaskEntity]:
+    ) -> List[TaskTable]:
         raise NotImplementedError
 
     @abstractmethod
@@ -21,15 +21,15 @@ class TasksRepository(ABC):
         self,
         request_uuid: uuid.UUID,
         session: AsyncSession = None,
-    ) -> Optional[TaskEntity]:
+    ) -> Optional[TaskTable]:
         raise NotImplementedError
 
     @abstractmethod
     async def create_task(
         self,
-        task: TaskEntity,
+        task: TaskTable,
         session: AsyncSession = None,
-    ) -> TaskEntity:
+    ) -> TaskTable:
         raise NotImplementedError
 
     @abstractmethod
@@ -38,7 +38,7 @@ class TasksRepository(ABC):
         request_uuid: uuid.UUID,
         session: AsyncSession = None,
         **update_task_kwargs,
-    ) -> Optional[TaskEntity]:
+    ) -> Optional[TaskTable]:
         raise NotImplementedError
 
     @abstractmethod
@@ -46,5 +46,5 @@ class TasksRepository(ABC):
         self,
         request_uuid: uuid.UUID,
         session: AsyncSession = None,
-    ) -> Optional[TaskEntity]:
+    ) -> Optional[TaskTable]:
         raise NotImplementedError

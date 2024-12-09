@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.data.database.connection.session_provider_mixin import SessionProviderMixin
 from src.data.database.tables.task_table import TaskTable
 from src.data.repositories.tasks.tasks_repository import TasksRepository
-from src.domain.entities import TaskEntity
 
 logger = logging.getLogger(__name__)
 
@@ -20,59 +19,41 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
     async def get_tasks(
         self,
         session: AsyncSession = None,
-    ) -> List[TaskEntity]:
+    ) -> List[TaskTable]:
 
         task_query = select(TaskTable)
-        result = (await session.execute(task_query)).scalars().all()
+        result = list(
+            (await session.execute(task_query)).scalars().all()
+        )
         await session.commit()
 
-        return list(
-            map(
-                lambda task: TaskEntity(
-                    request_uuid=task.request_uuid,
-                    source_file_path=task.source_file_path,
-                    result_file_path=task.result_file_path,
-                    status=task.status
-                ),
-                result,
-            )
-        )
+        logger.info(f"Selected tasks {result}")
+        return result
 
     @SessionProviderMixin._session_provider
     async def get_task(
         self,
         request_uuid: uuid.UUID,
         session: AsyncSession = None
-    ) -> Optional[TaskEntity]:
+    ) -> Optional[TaskTable]:
         task_query = select(TaskTable).where(TaskTable.request_uuid == request_uuid)
         result: Optional[TaskTable] = (await session.execute(task_query)).scalar()
 
         await session.commit()
 
-        if not result:
-            return None
-        return TaskEntity(
-            request_uuid=result.request_uuid,
-            source_file_path=result.source_file_path,
-            result_file_path=result.result_file_path,
-            status=result.status,
-        )
+        logger.info(f"Selected task {result}")
+        return result
 
     @SessionProviderMixin._session_provider
     async def create_task(
         self,
-        task: TaskEntity,
+        task: TaskTable,
         session: AsyncSession = None,
-    ) -> TaskEntity:
-        new_task = TaskTable(
-            request_uuid=task.request_uuid,
-            source_file_path=task.source_file_path,
-            result_file_path=task.result_file_path,
-            status=task.status,
-        )
-
-        session.add(new_task)
+    ) -> TaskTable:
+        session.add(task)
         await session.commit()
+
+        logger.info(f"Created task {task}")
         return task
 
     @SessionProviderMixin._session_provider
@@ -81,7 +62,7 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         request_uuid: uuid.UUID,
         session: AsyncSession = None,
         **update_task_kwargs,
-    ) -> Optional[TaskEntity]:
+    ) -> Optional[TaskTable]:
         query = update(TaskTable).where(
             TaskTable.request_uuid == request_uuid,
         ).values(
@@ -91,21 +72,15 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         update_result: Optional[TaskTable] = (await session.execute(query)).scalar()
         await session.commit()
 
-        if not update_result:
-            return None
-        return TaskEntity(
-            request_uuid=update_result.request_uuid,
-            source_file_path=update_result.source_file_path,
-            result_file_path=update_result.result_file_path,
-            status=update_result.status,
-        )
+        logger.info(f"Updated task {update_result}")
+        return update_result
 
     @SessionProviderMixin._session_provider
     async def delete_task(
         self,
         request_uuid: uuid.UUID,
         session: AsyncSession = None,
-    ) -> Optional[TaskEntity]:
+    ) -> Optional[TaskTable]:
         result = self.get_task(request_uuid)
         if not result:
             return None
@@ -117,11 +92,5 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         delete_result: Optional[TaskTable] = (await session.execute(query)).scalar()
         await session.commit()
 
-        if not delete_result:
-            return None
-        return TaskEntity(
-            request_uuid=delete_result.request_uuid,
-            source_file_path=delete_result.source_file_path,
-            result_file_path=delete_result.result_file_path,
-            status=delete_result.status
-        )
+        logger.info(f"Deleted task {delete_result}")
+        return delete_result

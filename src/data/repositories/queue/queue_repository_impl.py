@@ -1,8 +1,12 @@
+import logging
+
 from aio_pika import Message
 
 from config import get_settings
 from src.data.queue import AMQPChannelManager
 from src.data.repositories.queue import QueueRepository
+
+logger = logging.getLogger(__name__)
 
 
 class QueueRepositoryImpl(QueueRepository):
@@ -20,4 +24,4 @@ class QueueRepositoryImpl(QueueRepository):
                 ),
                 routing_key=get_settings().RABBITMQ_TASKS_QUEUE,
             )
-
+            logger.info(f"Pushed message {message_body} to a queue {get_settings().RABBITMQ_TASKS_QUEUE}")

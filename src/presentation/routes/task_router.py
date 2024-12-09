@@ -27,7 +27,7 @@ async def create_task(
     task_controller: TaskController = Depends(TaskControllerImpl),
 ):
     try:
-        new_task = await task_controller.create_task(task_source_file)
+        task_response = await task_controller.create_task(task_source_file)
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
@@ -37,10 +37,7 @@ async def create_task(
 
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
-        content= CreateTaskResponse(
-            request_uuid=str(new_task.request_uuid),
-            source_file_path=new_task.source_file_path,
-        ).model_dump()
+        content= task_response.model_dump()
     )
 
 
