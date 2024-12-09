@@ -10,6 +10,7 @@ from src.data.repositories.tasks import TasksRepository, TasksRepositoryImpl
 from src.domain.entities import TaskEntity
 from src.domain.entities.task_entity import TaskStatus
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Worker:
