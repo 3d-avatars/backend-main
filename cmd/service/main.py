@@ -14,11 +14,12 @@ async def main():
         uvicorn.run(
             "cmd.service.main:app",
             host=settings.APP_HOST,
+            port=settings.APP_PORT,
             reload=True,
             reload_dirs=["src", "app", "config"],
-            port=settings.APP_PORT,
             log_config="log_conf.yaml",
             log_level=logging.INFO,
+            proxy_headers=True
         )
     except Exception:
         await prune_application_dependencies()

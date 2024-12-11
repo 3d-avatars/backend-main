@@ -46,6 +46,8 @@ class TaskControllerImpl(TaskController):
         self,
         task_request_uuid: uuid.UUID
     ) -> Optional[str]:
+        # TODO remove stub
+        return "http://130.193.48.248:9000/glb-files/avatar_male_2024-12-10_00%3A04%3A03_result.glb"
         task = await self.task_repository.get_task(request_uuid=task_request_uuid)
         result_file_id = task.result_file_metadata_id
 
