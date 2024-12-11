@@ -1,35 +1,17 @@
-import asyncio
-
-import pika
-
-import pika
-import aio_pika
 from contextlib import asynccontextmanager
+from typing import Optional
+
+import aio_pika
+from aio_pika.abc import AbstractRobustConnection, AbstractRobustChannel
+
 from config import get_settings
 
 
 class AMQPChannelManager:
 
-    @classmethod
-    async def prune(cls) -> None:
-        if not hasattr(cls, 'instance'):
-            return
-
-        await cls.instance._connection.close()
-        delattr(cls.instance)
-
-    @asynccontextmanager
-    async def get_channel(self):
-        if self.connect_refresh:
-            await self.refresh()
-            self.connect_refresh = False
-
-        channel = await self._connection.channel()
-        yield channel
-        await channel.close()
-
     def __init__(self) -> None:
-        ...
+        self.connect_refresh: bool = True
+        self._connection: Optional[AbstractRobustConnection] = None
 
     def __new__(cls):
         if not hasattr(cls, "instance"):
@@ -37,6 +19,24 @@ class AMQPChannelManager:
             cls.instance.connect_refresh = True
 
         return cls.instance  # noqa
+
+    @classmethod
+    async def dispose(cls) -> None:
+        if not hasattr(cls, 'instance'):
+            return
+
+        await cls.instance._connection.close()
+        delattr(cls.instance)
+
+    @asynccontextmanager
+    async def get_channel(self) -> AbstractRobustChannel:
+        if self.connect_refresh:
+            await self.refresh()
+            self.connect_refresh = False
+
+        channel = await self._connection.channel()
+        yield channel
+        await channel.close()
 
     async def refresh(self):
         settings = get_settings()

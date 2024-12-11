@@ -1,0 +1,50 @@
+import uuid
+from abc import ABC, abstractmethod
+from typing import List, Optional
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.data.database.tables import TaskTable
+
+
+class TasksRepository(ABC):
+
+    @abstractmethod
+    async def get_tasks(
+        self,
+        session: AsyncSession = None,
+    ) -> List[TaskTable]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_task(
+        self,
+        request_uuid: uuid.UUID,
+        session: AsyncSession = None,
+    ) -> Optional[TaskTable]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def create_task(
+        self,
+        task: TaskTable,
+        session: AsyncSession = None,
+    ) -> TaskTable:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_task(
+        self,
+        request_uuid: uuid.UUID,
+        session: AsyncSession = None,
+        **update_task_kwargs,
+    ) -> Optional[TaskTable]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_task(
+        self,
+        request_uuid: uuid.UUID,
+        session: AsyncSession = None,
+    ) -> Optional[TaskTable]:
+        raise NotImplementedError

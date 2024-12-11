@@ -1,7 +1,7 @@
-from ...queue.connection import AMQPChannelManager
-from .queue_repository import AMQPQueue
+from src.data.repositories.queue.queue_repository import QueueRepository
+from src.data.repositories.queue.queue_repository_impl import QueueRepositoryImpl
 
 __all__ = [
-    "AMQPChannelManager",
-    "AMQPQueue",
+    "QueueRepository",
+    "QueueRepositoryImpl",
 ]

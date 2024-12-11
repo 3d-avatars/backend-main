@@ -1,0 +1,87 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: 'postgres:14'
+    restart: always
+    env_file:
+      - ./.env
+    hostname: ${POSTGRES_HOST}
+    ports:
+      - '${POSTGRES_PORT}:${POSTGRES_PORT}'
+    volumes:
+      - postgres-data:/var/lib/postgresql
+
+  minio:
+    image: 'minio/minio:RELEASE.2024-11-07T00-52-20Z-cpuv1'
+    restart: on-failure
+    env_file:
+      - ./.env
+    hostname: ${MINIO_HOST}
+    healthcheck:
+      test: mc ready local
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${MINIO_API_PORT}:${MINIO_API_PORT}"
+      - "${MINIO_WEB_UI_PORT}:${MINIO_WEB_UI_PORT}"
+    volumes:
+      - minio-data:/var/lib/minio/
+    command: ["server", "--console-address", ":9001", "/var/lib/minio/"]
+
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    restart: on-failure
+    env_file:
+      - ./.env
+    hostname: ${RABBITMQ_HOST}
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 15s
+      timeout: 30s
+      retries: 3
+    ports:
+      - "${RABBITMQ_PORT_MANAGEMENT}:15672"
+      - "${RABBITMQ_PORT}:5672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  main-service:
+    build:
+      context: ..
+      dockerfile: ./deployment/Dockerfile
+    env_file:
+      - ./.env
+    depends_on:
+      postgres:
+        condition: service_started
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    volumes:
+      - ../.:/app
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+
+  worker:
+    build:
+      context: ..
+      dockerfile: ./deployment/Dockerfile
+    env_file:
+      - ./.env
+    depends_on:
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ../.:/app
+    command: ["python3", "/app/cmd/worker/main.py"]
+
+
+volumes:
+  postgres-data:
+  minio-data:
+  rabbitmq-data:

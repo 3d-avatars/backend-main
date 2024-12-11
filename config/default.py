@@ -20,22 +20,23 @@ class DefaultSettings(BaseSettings):
     APP_PORT: int = int(environ.get("APP_PORT", 8080))
 
     # Postgres
-    POSTGRES_DB: str = environ.get("POSTGRES_DB", "stream_contoller_db")
+    POSTGRES_DB: str = environ.get("POSTGRES_DB", "task_db")
     POSTGRES_HOST: str = environ.get("POSTGRES_HOST", "localhost")
+    POSTGRES_HOST_FOR_MIGRATIONS: str = environ.get("POSTGRES_HOST_FOR_MIGRATIONS", "localhost")
     POSTGRES_USER: str = environ.get("POSTGRES_USER", "user")
     POSTGRES_PORT: int = int(environ.get("POSTGRES_PORT", "5432")[-4:])
     POSTGRES_PASSWORD: str = environ.get("POSTGRES_PASSWORD", "hackme")
     DB_CONNECT_RETRY: int = environ.get("DB_CONNECT_RETRY", 20)
     DB_POOL_SIZE: int = environ.get("DB_POOL_SIZE", 15)
 
-    # Token settings
-    # to get a string like this run: "openssl rand -hex 32"
-    SECRET_KEY: str = environ.get("SECRET_KEY", "")
-    ALGORITHM: str = environ.get("ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 1440))
-
-    PWD_CONTEXT: CryptContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    OAUTH2_SCHEME: OAuth2PasswordBearer = OAuth2PasswordBearer(tokenUrl=f"{APP_HOST}:{APP_PORT}{PATH_PREFIX}/user/authentication")
+    #Minio
+    MINIO_HOST: str = environ.get("MINIO_HOST", "minio")
+    MINIO_PROD_HOST: str = environ.get("MINIO_PROD_HOST", "minio")
+    MINIO_API_PORT: int = int(environ.get("MINIO_API_PORT", "9000")[-4:])
+    MINIO_ROOT_USER: str = environ.get("MINIO_ROOT_USER", "task_user")
+    MINIO_ROOT_PASSWORD: str = environ.get("MINIO_ROOT_PASSWORD", "hackme_task_user")
+    MINIO_IMAGES_BUCKET: str = environ.get("MINIO_IMAGES_BUCKET", "source-images")
+    MINIO_GLB_BUCKET: str = environ.get("MINIO_GLB_BUCKET", "glb-files")
 
     # RabbitMQ
     RABBITMQ_HOST: str = environ.get("RABBITMQ_HOST", "rabbitmq")
@@ -48,29 +49,51 @@ class DefaultSettings(BaseSettings):
     @property
     def database_settings(self) -> dict:
         """
-        Get all settings for connection with database.
+        Get all settings for connection with tasks.
         """
         return {
-            "database": self.POSTGRES_DB,
             "user": self.POSTGRES_USER,
             "password": self.POSTGRES_PASSWORD,
             "host": self.POSTGRES_HOST,
             "port": self.POSTGRES_PORT,
+            "database": self.POSTGRES_DB,
+        }
+
+    @property
+    def database_settings_for_migrations(self) -> dict:
+        """
+        Get all settings for connection with tasks.
+        """
+        return {
+            "user": self.POSTGRES_USER,
+            "password": self.POSTGRES_PASSWORD,
+            "host": self.POSTGRES_HOST_FOR_MIGRATIONS,
+            "port": self.POSTGRES_PORT,
+            "database": self.POSTGRES_DB,
         }
 
     @property
     def database_uri(self) -> str:
         """
-        Get uri for connection with database.
+        Get uri for connection with tasks.
         """
         return "postgresql+asyncpg://{user}:{password}@{host}:{port}/{database}".format(
             **self.database_settings,
         )
 
     @property
+    def database_uri_for_migrations(self) -> str:
+        """
+        Get uri for connection with tasks.
+        """
+        return "postgresql+asyncpg://{user}:{password}@{host}:{port}/{database}".format(
+            **self.database_settings_for_migrations,
+        )
+
+    @property
     def database_uri_sync(self) -> str:
         """
-        Get uri for connection with database.
+        Get uri for connection with tasks.
         """
         return "postgresql://{user}:{password}@{host}:{port}/{database}".format(
             **self.database_settings,

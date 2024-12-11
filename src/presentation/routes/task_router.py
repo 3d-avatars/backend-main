@@ -1,139 +1,113 @@
-import typing
+import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi import UploadFile
+from fastapi.responses import JSONResponse
 
-from fastapi.responses import JSONResponse, RedirectResponse
+from src.domain.entities import TaskStatus
+from src.domain.services import TaskController, TaskControllerImpl
+from src.presentation.responses import GetTaskStatusResponse, GetTaskResultResponse, CreateTaskResponse
 
-from src.schemas.task_schema import (
-    Task,
-    TaskFilter,
-    TaskStateUpdateRequest
+logger = logging.getLogger(__name__)
+
+task_router = APIRouter(
+    prefix="/3d-model-generation",
+    tags=["Tasks"],
 )
 
-from src.services import BaseService, TaskService
-from src.enums import TaskStatus
-
-
-router = APIRouter(
-    prefix='/3d-model-generation',
-    tags=['task'],
-)
-
-
-@router.get(
-    '/',
-    status_code=status.HTTP_200_OK,
-    response_model=typing.List[Task],
-)
-async def get_task_list(
-        task_filter: typing.Annotated[TaskFilter, Query()],
-        task_service: BaseService = Depends(TaskService),
-):
-    tasks = await task_service.get(task_filter)
-    return list(map(Task.from_orm, tasks))
-
-
-@router.get(
-    '/{task_id}',
-    status_code=status.HTTP_200_OK,
-    response_model=Task,
-)
-async def get_task(
-        task_id: int,
-        task_service: BaseService = Depends(TaskService),
-):
-    task = await task_service.get_single(task_id)
-    if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-    return task
-
-
-@router.post(
-    '/',
+@task_router.post(
+    path="/tasks",
+    description="Upload input image for generating 3d model. Post tasks",
     status_code=status.HTTP_201_CREATED,
-    response_model=Task,
-    description="Upload input image for generating 3d model. Post task",
+    response_model=CreateTaskResponse,
 )
 async def create_task(
-        task_source_file: UploadFile,
-        x_request_id: typing.Annotated[uuid.UUID, Header()],
-        task_service: BaseService = Depends(TaskService),
+    task_source_file: UploadFile,
+    task_controller: TaskController = Depends(TaskControllerImpl),
 ):
-    new_task = await task_service.create(
-        x_request_id,
-        task_source_file,
-    )
-    return new_task
+    try:
+        task_response = await task_controller.create_task(task_source_file)
+    except Exception as e:
+        logger.exception(e)
+        raise HTTPException(
+            status_code=500,
+            detail="Something went wrong"
+        )
 
-
-@router.patch(
-    '/{task_id}/state',
-    status_code=status.HTTP_200_OK,
-    description="Update generating status of task",
-)
-async def update_task_status(
-        task_id: int,
-        task_state_payload: TaskStateUpdateRequest,
-        task_service: BaseService = Depends(TaskService),
-):
-    return await task_service.update(
-        task_id,
-        task_state_payload,
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content= task_response.model_dump()
     )
 
 
-@router.get(
-    '/{task_id}/result',
-    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
-    description="Get task state",
-)
-async def get_task_status(task_id: int, task_service: BaseService = Depends(TaskService)):
-    task = await task_service.get_single(task_id=task_id)
-    if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"The task {task_id} not found"
-        )
-
-    if task.state == TaskStatus.FAILED:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="The generation has been failed.",
-        )
-
-    if task.state != TaskStatus.SUCCESS and not task.result_file_path:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="The resulting 3d model has not yet been generated.",
-        )
-
-    return RedirectResponse(url=task.result_file_path)
-
-
-@router.get(
-    '/{task_id}/state',
+@task_router.get(
+    path="/tasks/{task_request_uuid}/status",
+    description="Get task status",
     status_code=status.HTTP_200_OK,
-    description="Get task result as a .glb file",
+    response_model=GetTaskStatusResponse,
+    response_description=f'Possible status values: {list(map(str, TaskStatus.values()))}'
 )
-async def get_task_result(task_id: int, task_service: BaseService = Depends(TaskService)):
-    task = await task_service.get_single(task_id=task_id)
-    if not task:
+async def get_task_status(
+    task_request_uuid: str,
+    task_controller: TaskController = Depends(TaskControllerImpl)
+):
+    try:
+        task_status = await task_controller.get_task_status(
+            task_request_uuid=uuid.UUID(task_request_uuid),
+        )
+    except Exception as e:
+        logger.exception(e)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=500,
+            detail="Something went wrong"
         )
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content={
-        "state": task.state,
-    })
+    if not task_status:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"The task with request uuid {task_request_uuid} not found",
+        )
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=GetTaskStatusResponse(
+            status = task_status,
+        ).model_dump(),
+    )
 
 
-@router.delete(
-    '/{task_id}',
-    status_code=status.HTTP_204_NO_CONTENT,
-    description="Delete task, source and result files",
+@task_router.get(
+    path="/tasks/{task_request_uuid}/result",
+    description="Get tasks result as a .glb file",
+    status_code=status.HTTP_200_OK,
+    response_model=GetTaskResultResponse,
+    response_description="Returns URL to S3 storage"
 )
-async def delete_task(task_id: int, task_service: BaseService = Depends(TaskService)):
-    return await task_service.delete(task_id)
+async def get_task_result(
+    task_request_uuid: str,
+    task_controller: TaskController = Depends(TaskControllerImpl)
+):
+    try:
+        task_result = await task_controller.get_task_result(
+            task_request_uuid=uuid.UUID(task_request_uuid),
+        )
+    except Exception as e:
+        logger.exception(e)
+        raise HTTPException(
+            status_code=500,
+            detail="Something went wrong"
+        )
+
+    if not task_result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"The task result with requiest uuid {task_request_uuid} not found"
+        )
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=GetTaskResultResponse(
+            result_file_path=task_result,
+        ).model_dump(),
+    )

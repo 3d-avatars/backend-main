@@ -1,7 +1,7 @@
+from contextlib import asynccontextmanager
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-
-from contextlib import asynccontextmanager
 
 from config import get_settings
 
@@ -36,9 +36,3 @@ async def get_session() -> AsyncSession:
     session_maker = SessionManager().get_session_maker()
     async with session_maker() as session:
         yield session
-
-
-__all__ = [
-    "get_session",
-    "SessionManager"
-]
