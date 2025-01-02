@@ -8,14 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.data.database.connection.session_provider_mixin import SessionProviderMixin
 from src.data.database.tables.task_table import TaskTable
-from src.data.repositories.tasks.tasks_repository import TasksRepository
+from src.data.repositories import TasksRepository
 
 logger = logging.getLogger(__name__)
 
 
 class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
 
-    @SessionProviderMixin._session_provider
+    @SessionProviderMixin.session_provider
     async def get_tasks(
         self,
         session: AsyncSession = None,
@@ -30,7 +30,7 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         logger.info(f"Selected tasks {result}")
         return result
 
-    @SessionProviderMixin._session_provider
+    @SessionProviderMixin.session_provider
     async def get_task(
         self,
         request_uuid: uuid.UUID,
@@ -44,7 +44,7 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         logger.info(f"Selected task {result}")
         return result
 
-    @SessionProviderMixin._session_provider
+    @SessionProviderMixin.session_provider
     async def create_task(
         self,
         task: TaskTable,
@@ -56,7 +56,7 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         logger.info(f"Created task {task}")
         return task
 
-    @SessionProviderMixin._session_provider
+    @SessionProviderMixin.session_provider
     async def update_task(
         self,
         request_uuid: uuid.UUID,
@@ -75,14 +75,14 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         logger.info(f"Updated task {update_result}")
         return update_result
 
-    @SessionProviderMixin._session_provider
+    @SessionProviderMixin.session_provider
     async def delete_task(
         self,
         request_uuid: uuid.UUID,
         session: AsyncSession = None,
     ) -> Optional[TaskTable]:
         result = self.get_task(request_uuid)
-        if not result:
+        if result is None:
             return None
 
         query = delete(TaskTable).where(
