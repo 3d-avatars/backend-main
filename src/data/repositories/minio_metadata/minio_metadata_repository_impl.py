@@ -6,14 +6,14 @@ from sqlalchemy.orm.sync import update
 
 from src.data.database.connection import SessionProviderMixin
 from src.data.database.tables import MinioMetadataTable
-from src.data.repositories.minio_metadata.minio_metadata_repository import MinioMetadataRepository
+from src.data.repositories import MinioMetadataRepository
 
 logger = logging.getLogger(__name__)
 
 
 class MinioMetadataRepositoryImpl(MinioMetadataRepository, SessionProviderMixin):
 
-    @SessionProviderMixin._session_provider
+    @SessionProviderMixin.session_provider
     async def get_metadata(
         self,
         metadata_id: int,
@@ -24,7 +24,7 @@ class MinioMetadataRepositoryImpl(MinioMetadataRepository, SessionProviderMixin)
         logger.info(f"Selected metadata {metadata}")
         return metadata
 
-    @SessionProviderMixin._session_provider
+    @SessionProviderMixin.session_provider
     async def create_metadata(
         self,
         session: AsyncSession = None,
@@ -38,7 +38,7 @@ class MinioMetadataRepositoryImpl(MinioMetadataRepository, SessionProviderMixin)
         logger.info(f"Created new metadata {new_metadata}")
         return new_metadata
 
-    @SessionProviderMixin._session_provider
+    @SessionProviderMixin.session_provider
     async def update_metadata(
         self,
         metadata_id: int,
