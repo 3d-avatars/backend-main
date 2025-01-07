@@ -24,6 +24,14 @@ class TaskTable(BaseTable):
         default=TaskStatus.INITIAL
     )
 
+    user_id = Column(
+        "user_id",
+        ForeignKey("user.id"),
+        nullable=False,
+        unique=True,
+        doc="Id of user that made this request"
+    )
+
     source_file_metadata_id = Column(
         "source_file_metadata_id",
         BIGINT,

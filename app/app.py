@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
 from src.presentation.routes import get_apps_router
@@ -16,6 +17,18 @@ def get_application() -> FastAPI:
         title="3D Avatar API (1.0)",
         debug=True,
         version="0.0.1",
+    )
+
+    origins = [
+        '*'
+    ]
+
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     application.include_router(get_apps_router())

@@ -5,8 +5,8 @@ from aio_pika.abc import AbstractIncomingMessage
 
 from config import get_settings
 from src.data.queue import AMQPChannelManager
-from src.data.repositories.minio_metadata import MinioMetadataRepository, MinioMetadataRepositoryImpl
-from src.data.repositories.tasks import TasksRepository, TasksRepositoryImpl
+from src.data.repositories import MinioMetadataRepository, MinioMetadataRepositoryImpl
+from src.data.repositories import TasksRepository, TasksRepositoryImpl
 from src.domain.entities import TaskEntity
 from src.domain.entities.task_entity import TaskStatus
 
@@ -41,7 +41,7 @@ class Worker:
                 status=TaskStatus.IN_PROGRESS
             )
             logger.info(f"Updated task status {decoded_task.request_uuid} to IN_PROGRESS")
-        elif result_file_metadata:
+        elif result_file_metadata is not None:
             metadata = await self.minio_metadata_repository.create_metadata(
                 bucket=result_file_metadata.bucket,
                 file_name=result_file_metadata.file_name,

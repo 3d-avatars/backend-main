@@ -4,8 +4,9 @@ from typing import Optional
 
 from fastapi import UploadFile
 
-from src.domain.entities.task_entity import TaskStatus
 from src.presentation.responses import CreateTaskResponse
+from src.presentation.responses import GetTaskResultResponse
+from src.presentation.responses import GetTaskStatusResponse
 
 
 class TaskController(ABC):
@@ -14,19 +15,20 @@ class TaskController(ABC):
     async def get_task_status(
         self,
         task_request_uuid: uuid.UUID,
-    ) -> TaskStatus:
+    ) -> Optional[GetTaskStatusResponse]:
         raise NotImplementedError
 
     @abstractmethod
     async def get_task_result(
         self,
         task_request_uuid: uuid.UUID,
-    ) -> Optional[str]:
+    ) -> Optional[GetTaskResultResponse]:
         raise NotImplementedError
 
     @abstractmethod
     async def create_task(
         self,
-        task_source_file: UploadFile,
+        user_id: int,
+        source_file: UploadFile,
     ) -> CreateTaskResponse:
         raise NotImplementedError

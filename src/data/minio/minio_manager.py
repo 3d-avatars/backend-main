@@ -14,7 +14,7 @@ class MinioManager:
         settings = get_settings()
 
         self.client = Minio(
-            endpoint=f"{settings.MINIO_PROD_HOST}:{settings.MINIO_API_PORT}",
+            endpoint=f"{settings.MINIO_HOST}:{settings.MINIO_API_PORT}",
             access_key=settings.MINIO_ROOT_USER,
             secret_key=settings.MINIO_ROOT_PASSWORD,
             secure=False,
@@ -31,14 +31,14 @@ class MinioManager:
                 self.client.make_bucket(bucket_name)
                 self.client.set_bucket_policy(
                     bucket_name=bucket_name,
-                    policy=MinioManager._get_public_read_policy()
+                    policy=MinioManager.__get_public_read_policy()
                 )
                 logger.info(f"Created bucket {bucket_name}")
             else:
                 logger.info(f"Bucket {bucket_name} already exists")
 
     @staticmethod
-    def _get_public_read_policy() -> json:
+    def __get_public_read_policy() -> json:
         policy = {
             "Version": "2012-10-17",
             "Statement": [

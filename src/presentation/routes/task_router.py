@@ -3,10 +3,12 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi import UploadFile
+from fastapi.params import Header
 from fastapi.responses import JSONResponse
 
-from src.domain.entities import TaskStatus
-from src.domain.services import TaskController, TaskControllerImpl
+from src.domain.entities import TaskStatus, TokenType
+from src.domain.controllers import TaskController, TaskControllerImpl
+from src.domain.controllers import AuthorizationController, AuthorizationControllerImpl
 from src.presentation.responses import GetTaskStatusResponse, GetTaskResultResponse, CreateTaskResponse
 
 logger = logging.getLogger(__name__)
@@ -16,6 +18,7 @@ task_router = APIRouter(
     tags=["Tasks"],
 )
 
+
 @task_router.post(
     path="/tasks",
     description="Upload input image for generating 3d model. Post tasks",
@@ -24,14 +27,26 @@ task_router = APIRouter(
 )
 async def create_task(
     task_source_file: UploadFile,
+    access_token: str = Header(),
     task_controller: TaskController = Depends(TaskControllerImpl),
+    authorization_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
 ):
+    token_validation_result = await authorization_controller.validate_token(access_token, TokenType.ACCESS)
+    if token_validation_result.status_code != status.HTTP_200_OK:
+        raise HTTPException(
+            status_code=token_validation_result.status_code,
+            detail=token_validation_result.detail,
+        )
+
     try:
-        task_response = await task_controller.create_task(task_source_file)
+        task_response = await task_controller.create_task(
+            user_id=token_validation_result.token_payload.user_id,
+            source_file=task_source_file,
+        )
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Something went wrong"
         )
 
@@ -50,8 +65,17 @@ async def create_task(
 )
 async def get_task_status(
     task_request_uuid: str,
-    task_controller: TaskController = Depends(TaskControllerImpl)
+    access_token: str = Header(),
+    task_controller: TaskController = Depends(TaskControllerImpl),
+    authorization_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
 ):
+    token_validation_result = await authorization_controller.validate_token(access_token, TokenType.ACCESS)
+    if token_validation_result.status_code != status.HTTP_200_OK:
+        raise HTTPException(
+            status_code=token_validation_result.status_code,
+            detail=token_validation_result.detail,
+        )
+
     try:
         task_status = await task_controller.get_task_status(
             task_request_uuid=uuid.UUID(task_request_uuid),
@@ -59,11 +83,11 @@ async def get_task_status(
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Something went wrong"
         )
 
-    if not task_status:
+    if task_status is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"The task with request uuid {task_request_uuid} not found",
@@ -71,9 +95,7 @@ async def get_task_status(
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content=GetTaskStatusResponse(
-            status = task_status,
-        ).model_dump(),
+        content=task_status.model_dump(),
     )
 
 
@@ -86,8 +108,17 @@ async def get_task_status(
 )
 async def get_task_result(
     task_request_uuid: str,
-    task_controller: TaskController = Depends(TaskControllerImpl)
+    access_token: str = Header(),
+    task_controller: TaskController = Depends(TaskControllerImpl),
+    authorization_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
 ):
+    token_validation_result = await authorization_controller.validate_token(access_token, TokenType.ACCESS)
+    if token_validation_result.status_code != status.HTTP_200_OK:
+        raise HTTPException(
+            status_code=token_validation_result.status_code,
+            detail=token_validation_result.detail,
+        )
+
     try:
         task_result = await task_controller.get_task_result(
             task_request_uuid=uuid.UUID(task_request_uuid),
@@ -95,19 +126,17 @@ async def get_task_result(
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Something went wrong"
         )
 
-    if not task_result:
+    if task_result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"The task result with requiest uuid {task_request_uuid} not found"
+            detail=f"The task result with request uuid {task_request_uuid} not found"
         )
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content=GetTaskResultResponse(
-            result_file_path=task_result,
-        ).model_dump(),
+        content=task_result.model_dump(),
     )

@@ -7,15 +7,14 @@ from fastapi import Depends, UploadFile
 
 from config import get_settings
 from src.data.database.tables import TaskTable
-from src.data.repositories.minio import MinioRepository, MinioRepositoryImpl
-from src.data.repositories.minio_metadata import MinioMetadataRepository, MinioMetadataRepositoryImpl
-from src.data.repositories.queue import QueueRepository
-from src.data.repositories.queue.queue_repository_impl import QueueRepositoryImpl
-from src.data.repositories.tasks import TasksRepository, TasksRepositoryImpl
+from src.data.repositories import MinioMetadataRepository, MinioMetadataRepositoryImpl
+from src.data.repositories import MinioRepository, MinioRepositoryImpl
+from src.data.repositories import QueueRepository, QueueRepositoryImpl
+from src.data.repositories import TasksRepository, TasksRepositoryImpl
 from src.domain.entities import TaskEntity, MinioMetadata
-from src.domain.entities.task_entity import TaskStatus
-from src.domain.services.task_controller import TaskController
-from src.presentation.responses import CreateTaskResponse
+from src.domain.entities import TaskStatus
+from src.domain.controllers import TaskController
+from src.presentation.responses import CreateTaskResponse, GetTaskResultResponse, GetTaskStatusResponse
 
 logger = logging.getLogger(__name__)
 
@@ -38,20 +37,25 @@ class TaskControllerImpl(TaskController):
     async def get_task_status(
         self,
         task_request_uuid: uuid.UUID
-    ) -> TaskStatus:
+    ) -> Optional[GetTaskStatusResponse]:
         task = await self.task_repository.get_task(request_uuid=task_request_uuid)
-        return task.status
+        if task is None:
+            return None
+
+        return GetTaskStatusResponse(status=task.status)
 
     async def get_task_result(
         self,
         task_request_uuid: uuid.UUID
-    ) -> Optional[str]:
+    ) -> Optional[GetTaskResultResponse]:
         # TODO remove stub
-        return "http://130.193.48.248:9000/glb-files/avatar_male_2024-12-10_00%3A04%3A03_result.glb"
+        return GetTaskResultResponse(
+            result_file_path="http://130.193.48.248:9000/glb-files/avatar_male_2024-12-10_00%3A04%3A03_result.glb"
+        )
         task = await self.task_repository.get_task(request_uuid=task_request_uuid)
         result_file_id = task.result_file_metadata_id
 
-        if not result_file_id:
+        if result_file_id is None:
             return None
 
         result_file_metadata = await self.minio_metadata_repository.get_metadata(result_file_id)
@@ -60,16 +64,17 @@ class TaskControllerImpl(TaskController):
             file_name=result_file_metadata.file_name,
         )
 
-        return result_file_url
+        return GetTaskResultResponse(result_file_path=result_file_url)
 
     async def create_task(
         self,
+        user_id: int,
         source_file: UploadFile,
     ) -> CreateTaskResponse:
         request_uuid = uuid.uuid4()
         source_file_name, file_type = source_file.filename.split(".")
         timestamp = datetime.datetime.now()
-        timestamp_formatted = timestamp.strftime("%Y-%m-%d_%H:%M:%S")
+        timestamp_formatted = f'{timestamp.strftime("%Y-%m-%d_%H:%M:%S")}.{timestamp.microsecond // 1000:03d}'
         minio_file_name = f"{source_file_name}_{timestamp_formatted}.{file_type}"
 
         source_file_path = await self.minio_repository.upload_file(
@@ -100,9 +105,10 @@ class TaskControllerImpl(TaskController):
         await self.task_repository.create_task(
             task=TaskTable(
                 request_uuid=request_uuid,
+                status=task_entity.status,
+                user_id=user_id,
                 source_file_metadata_id=metadata.id,
                 result_file_metadata_id=None,
-                status=task_entity.status,
             )
         )
 

@@ -2,7 +2,7 @@ import logging
 from typing import BinaryIO, Optional
 
 from src.data.minio import MinioManager
-from src.data.repositories.minio.minio_repository import MinioRepository
+from src.data.repositories import MinioRepository
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class MinioRepositoryImpl(MinioRepository):
         except Exception as e:
             logger.error(f"Failed to download file with exception {e}")
 
-        if not response:
+        if response is None:
             return ""
 
         http_options_index = response.find("?")

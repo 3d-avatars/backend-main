@@ -1,7 +1,6 @@
 from os import environ
-
-from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
+
 from pydantic_settings import BaseSettings
 
 
@@ -19,9 +18,15 @@ class DefaultSettings(BaseSettings):
     APP_HOST: str = environ.get("APP_HOST", "http://127.0.0.1")
     APP_PORT: int = int(environ.get("APP_PORT", 8080))
 
+    SECRET_KEY: str = environ.get("SECRET_KEY", "")
+    REFRESH_SECRET_KEY: str = environ.get("REFRESH_SECRET_KEY", "")
+    HASH_ALGORITHM: str = environ.get("HASH_ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 24)
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = environ.get("REFRESH_TOKEN_EXPIRE_MINUTES", 168)
+
     # Postgres
     POSTGRES_DB: str = environ.get("POSTGRES_DB", "task_db")
-    POSTGRES_HOST: str = environ.get("POSTGRES_HOST", "localhost")
+    POSTGRES_HOST: str = environ.get("POSTGRES_HOST", "postgres")
     POSTGRES_HOST_FOR_MIGRATIONS: str = environ.get("POSTGRES_HOST_FOR_MIGRATIONS", "localhost")
     POSTGRES_USER: str = environ.get("POSTGRES_USER", "user")
     POSTGRES_PORT: int = int(environ.get("POSTGRES_PORT", "5432")[-4:])
@@ -31,7 +36,6 @@ class DefaultSettings(BaseSettings):
 
     #Minio
     MINIO_HOST: str = environ.get("MINIO_HOST", "minio")
-    MINIO_PROD_HOST: str = environ.get("MINIO_PROD_HOST", "minio")
     MINIO_API_PORT: int = int(environ.get("MINIO_API_PORT", "9000")[-4:])
     MINIO_ROOT_USER: str = environ.get("MINIO_ROOT_USER", "task_user")
     MINIO_ROOT_PASSWORD: str = environ.get("MINIO_ROOT_PASSWORD", "hackme_task_user")
