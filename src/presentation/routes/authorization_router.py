@@ -48,7 +48,7 @@ async def registration(
     )
 
 
-@authorization_router.get(
+@authorization_router.post(
     path="/authorization",
     description="Authorization",
     status_code=status.HTTP_200_OK,

@@ -28,7 +28,6 @@ class TaskTable(BaseTable):
         "user_id",
         ForeignKey("user.id"),
         nullable=False,
-        unique=True,
         doc="Id of user that made this request"
     )
 
