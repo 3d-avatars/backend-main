@@ -72,7 +72,8 @@ class TaskControllerImpl(TaskController):
         source_file: UploadFile,
     ) -> CreateTaskResponse:
         request_uuid = uuid.uuid4()
-        source_file_name, file_type = source_file.filename.split(".")
+        file_type_index = source_file.filename.rfind(".")
+        source_file_name, file_type = source_file.filename[:file_type_index], source_file.filename[file_type_index:]
         timestamp = datetime.datetime.now()
         timestamp_formatted = f'{timestamp.strftime("%Y-%m-%d_%H:%M:%S")}.{timestamp.microsecond // 1000:03d}'
         minio_file_name = f"{source_file_name}_{timestamp_formatted}.{file_type}"
