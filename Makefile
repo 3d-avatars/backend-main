@@ -16,9 +16,6 @@ env: ##@ Copy env from example files
 	cp .env.example .env
 	cp log_conf_example.yaml log_conf.yaml
 
-run: ##@ Local service launch
-	python3 cmd/service/main.py
-
 deploy: ##@ Set up docker environment
 	docker-compose -f ./deployment/docker-compose.yml up --build --remove-orphans
 
