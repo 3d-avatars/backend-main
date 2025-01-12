@@ -14,7 +14,7 @@ class MinioManager:
         settings = get_settings()
 
         self.client = Minio(
-            endpoint=f"{settings.MINIO_HOST}:{settings.MINIO_API_PORT}",
+            endpoint=f"{settings.MINIO_PROD_HOST}:{settings.MINIO_API_PORT}",
             access_key=settings.MINIO_ROOT_USER,
             secret_key=settings.MINIO_ROOT_PASSWORD,
             secure=False,

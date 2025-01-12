@@ -5,14 +5,16 @@ from fastapi.params import Header
 from starlette.responses import JSONResponse
 
 from src.domain.controllers import AuthorizationController, AuthorizationControllerImpl
-from src.presentation.responses.authorization.registration_response import RegistrationResponse
-from src.presentation.responses.authorization.token_pair_response import TokenPairResponse
+from src.presentation.requests import RegistrationRequestBody
+from src.presentation.requests.authorization.authorization_request_body import AuthorizationRequestBody
+from src.presentation.responses import RegistrationResponse
+from src.presentation.responses import TokenPairResponse
 
 logger = logging.getLogger(__name__)
 
 authorization_router = APIRouter(
     prefix="/users",
-    tags=["Authorization & Registration"]
+    tags=["Registration & Authorization"]
 )
 
 @authorization_router.post(
@@ -22,12 +24,11 @@ authorization_router = APIRouter(
     response_model=RegistrationResponse,
 )
 async def registration(
-    email: str,
-    password: str,
+    body: RegistrationRequestBody,
     authorization_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
 ):
     try:
-        result = await authorization_controller.register_user(email, password)
+        result = await authorization_controller.register_user(body.email, body.password)
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
@@ -47,19 +48,18 @@ async def registration(
     )
 
 
-@authorization_router.get(
+@authorization_router.post(
     path="/authorization",
     description="Authorization",
     status_code=status.HTTP_200_OK,
     response_model=TokenPairResponse,
 )
 async def authorization(
-    email: str,
-    password: str,
+    body: AuthorizationRequestBody,
     authorization_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
 ):
     try:
-        tokens = await authorization_controller.authenticate_user(email, password)
+        tokens = await authorization_controller.authenticate_user(body.email, body.password)
     except Exception as e:
         logger.exception(e)
         raise HTTPException(

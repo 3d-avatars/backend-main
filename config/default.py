@@ -36,6 +36,7 @@ class DefaultSettings(BaseSettings):
 
     #Minio
     MINIO_HOST: str = environ.get("MINIO_HOST", "minio")
+    MINIO_PROD_HOST: str =environ.get("MINIO_PROD_HOST", "minio")
     MINIO_API_PORT: int = int(environ.get("MINIO_API_PORT", "9000")[-4:])
     MINIO_ROOT_USER: str = environ.get("MINIO_ROOT_USER", "task_user")
     MINIO_ROOT_PASSWORD: str = environ.get("MINIO_ROOT_PASSWORD", "hackme_task_user")
