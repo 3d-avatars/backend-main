@@ -48,10 +48,6 @@ class TaskControllerImpl(TaskController):
         self,
         task_request_uuid: uuid.UUID
     ) -> Optional[GetTaskResultResponse]:
-        # TODO remove stub
-        return GetTaskResultResponse(
-            result_file_path="http://130.193.48.248:9000/glb-files/avatar_male_2024-12-10_00%3A04%3A03_result.glb"
-        )
         task = await self.task_repository.get_task(request_uuid=task_request_uuid)
         result_file_id = task.result_file_metadata_id
 
@@ -75,8 +71,8 @@ class TaskControllerImpl(TaskController):
         file_type_index = source_file.filename.rfind(".")
         source_file_name, file_type = source_file.filename[:file_type_index], source_file.filename[file_type_index:]
         timestamp = datetime.datetime.now()
-        timestamp_formatted = f'{timestamp.strftime("%Y-%m-%d_%H:%M:%S")}.{timestamp.microsecond // 1000:03d}'
-        minio_file_name = f"{source_file_name}_{timestamp_formatted}.{file_type}"
+        timestamp_formatted = f'{timestamp.strftime("%Y-%m-%d_%H:%M:%S")}:{timestamp.microsecond // 1000:03d}'
+        minio_file_name = f"{source_file_name}_{timestamp_formatted}{file_type}"
 
         source_file_path = await self.minio_repository.upload_file(
             target_bucket=self.settings.MINIO_IMAGES_BUCKET,
