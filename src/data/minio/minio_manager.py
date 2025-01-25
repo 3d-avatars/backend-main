@@ -31,13 +31,14 @@ class MinioManager:
             bucket_exists = self.client.bucket_exists(bucket_name)
             if not bucket_exists:
                 self.client.make_bucket(bucket_name)
-                self.client.set_bucket_policy(
-                    bucket_name=bucket_name,
-                    policy=MinioManager.__get_public_read_policy()
-                )
                 logger.info(f"Created bucket {bucket_name}")
             else:
                 logger.info(f"Bucket {bucket_name} already exists")
+
+            self.client.set_bucket_policy(
+                bucket_name=bucket_name,
+                policy=MinioManager.__get_public_read_policy()
+            )
 
     @staticmethod
     def __get_public_read_policy() -> json:
