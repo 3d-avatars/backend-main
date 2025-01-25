@@ -41,7 +41,7 @@ async def create_task(
     try:
         task_response = await task_controller.create_task(
             user_id=token_validation_result.token_payload.user_id,
-            source_file=task_source_file,
+            input_file=task_source_file,
         )
     except Exception as e:
         logger.exception(e)

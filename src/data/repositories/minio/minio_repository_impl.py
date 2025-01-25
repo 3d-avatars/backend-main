@@ -1,5 +1,5 @@
 import logging
-from typing import BinaryIO, Optional
+from typing import BinaryIO, Optional, List
 
 from src.data.minio import MinioManager
 from src.data.repositories import MinioRepository
@@ -54,3 +54,23 @@ class MinioRepositoryImpl(MinioRepository):
 
         http_options_index = response.find("?")
         return response[:http_options_index] if http_options_index != -1 else response
+
+    async def download_all_deca_emotions(
+        self,
+        target_bucket: str,
+    ) -> List[str]:
+        response: List[str] = []
+
+        files = self.manager.client.list_objects(
+            bucket_name=target_bucket
+        )
+
+        for file in files:
+            download_url = await self.download_file(
+                target_bucket=target_bucket,
+                file_name=file.object_name
+            )
+            response.append(download_url)
+
+        logger.info(f"Got deca emotions urls {response}")
+        return response

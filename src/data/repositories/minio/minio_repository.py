@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import BinaryIO
+from typing import BinaryIO, List
 
 
 class MinioRepository:
@@ -21,4 +21,11 @@ class MinioRepository:
         target_bucket: str,
         file_name: str,
     ) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def download_all_deca_emotions(
+        self,
+        target_bucket: str
+    ) -> List[str]:
         raise NotImplementedError

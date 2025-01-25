@@ -31,13 +31,13 @@ class TaskTable(BaseTable):
         doc="Id of user that made this request"
     )
 
-    source_file_metadata_id = Column(
-        "source_file_metadata_id",
+    input_file_metadata_id = Column(
+        "input_file_metadata_id",
         BIGINT,
         ForeignKey("minio_metadata.id"),
         nullable=False,
         unique=True,
-        doc="S3 metadata for source file",
+        doc="S3 metadata for input file",
     )
 
     result_file_metadata_id = Column(

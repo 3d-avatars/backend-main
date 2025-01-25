@@ -23,8 +23,10 @@ class MinioManager:
 
         buckets = [
             settings.MINIO_IMAGES_BUCKET,
-            settings.MINIO_GLB_BUCKET,
+            settings.MINIO_3D_FILES_BUCKET,
+            settings.MINIO_DECA_EMOTIONS_BUCKET
         ]
+
         for bucket_name in buckets:
             bucket_exists = self.client.bucket_exists(bucket_name)
             if not bucket_exists:
