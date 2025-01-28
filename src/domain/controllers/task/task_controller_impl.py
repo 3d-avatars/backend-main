@@ -71,7 +71,7 @@ class TaskControllerImpl(TaskController):
         file_type_index = input_file.filename.rfind(".")
 
         input_file_name, file_type = input_file.filename[:file_type_index], input_file.filename[file_type_index:]
-        input_file_name = input_file_name.replace(" ", "_")
+        input_file_name = input_file_name.replace(" ", "_")[:10]
 
         timestamp = datetime.datetime.now()
         timestamp_formatted = f"{timestamp.strftime('%Y-%m-%d_%H:%M:%S')}:{timestamp.microsecond // 1000:03d}"
