@@ -3,8 +3,8 @@ from enum import Enum
 from pydantic import BaseModel
 
 class TokenType(str, Enum):
-    ACCESS = "Access"
-    REFRESH = "Refresh"
+    ACCESS = "ACCESS"
+    REFRESH = "REFRESH"
 
 
 class TokenPayload(BaseModel):

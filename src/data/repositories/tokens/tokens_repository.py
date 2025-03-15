@@ -3,31 +3,34 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.data.database.tables import UserTable
+from src.data.database.tables.token_table import TokenTable
+from src.domain.entities import TokenType
 
 
-class UsersRepository(ABC):
+class TokensRepository(ABC):
 
     @abstractmethod
-    async def get_user_by_email(
+    async def add_token(
         self,
-        user_email: str,
+        token: TokenTable,
         session: AsyncSession = None,
-    ) -> Optional[UserTable]:
+    ) -> TokenTable:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_user_by_id(
+    async def get_user_id_by_token(
         self,
-        user_id: int,
+        token: str,
+        token_type: TokenType,
         session: AsyncSession = None,
-    ) -> Optional[UserTable]:
+    ) -> Optional[int]:
         raise NotImplementedError
 
     @abstractmethod
-    async def create_user(
+    async def delete_token(
         self,
-        user: UserTable,
+        token: str,
+        token_type: TokenType,
         session: AsyncSession = None,
-    ) -> UserTable:
+    ) -> Optional[TokenTable]:
         raise NotImplementedError

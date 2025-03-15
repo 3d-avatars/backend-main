@@ -17,7 +17,15 @@ class TasksRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_task(
+    async def get_tasks_by_user_id(
+        self,
+        user_id: int,
+        session: AsyncSession = None,
+    ) -> List[TaskTable]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_task_by_request_uuid(
         self,
         request_uuid: uuid.UUID,
         session: AsyncSession = None,
