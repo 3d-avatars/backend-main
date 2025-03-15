@@ -29,6 +29,6 @@ class TaskController(ABC):
     async def create_task(
         self,
         user_id: int,
-        source_file: UploadFile,
+        input_file: UploadFile,
     ) -> CreateTaskResponse:
         raise NotImplementedError

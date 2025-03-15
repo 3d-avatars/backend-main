@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -17,6 +17,7 @@ class TaskStatus(str, LruCachedEnum):
 
 class TaskEntity(BaseModel):
     request_uuid: uuid.UUID
-    source_file_metadata: MinioMetadata
+    input_file_url: str
+    emotion_files_urls: List[str]
     result_file_metadata: Optional[MinioMetadata]
     status: TaskStatus

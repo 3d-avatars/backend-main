@@ -1,5 +1,4 @@
 from os import environ
-from passlib.context import CryptContext
 
 from pydantic_settings import BaseSettings
 
@@ -40,8 +39,9 @@ class DefaultSettings(BaseSettings):
     MINIO_API_PORT: int = int(environ.get("MINIO_API_PORT", "9000")[-4:])
     MINIO_ROOT_USER: str = environ.get("MINIO_ROOT_USER", "task_user")
     MINIO_ROOT_PASSWORD: str = environ.get("MINIO_ROOT_PASSWORD", "hackme_task_user")
-    MINIO_IMAGES_BUCKET: str = environ.get("MINIO_IMAGES_BUCKET", "source-images")
-    MINIO_GLB_BUCKET: str = environ.get("MINIO_GLB_BUCKET", "glb-files")
+    MINIO_IMAGES_BUCKET: str = environ.get("MINIO_IMAGES_BUCKET", "input-images")
+    MINIO_3D_FILES_BUCKET: str = environ.get("MINIO_3D_FILES_BUCKET", "3d-files")
+    MINIO_DECA_EMOTIONS_BUCKET: str = environ.get("MINIO_DECA_EMOTIONS_BUCKET", "deca-emotions")
 
     # RabbitMQ
     RABBITMQ_HOST: str = environ.get("RABBITMQ_HOST", "rabbitmq")

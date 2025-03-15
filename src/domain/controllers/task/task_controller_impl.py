@@ -65,35 +65,39 @@ class TaskControllerImpl(TaskController):
     async def create_task(
         self,
         user_id: int,
-        source_file: UploadFile,
+        input_file: UploadFile,
     ) -> CreateTaskResponse:
         request_uuid = uuid.uuid4()
-        file_type_index = source_file.filename.rfind(".")
-        source_file_name, file_type = source_file.filename[:file_type_index], source_file.filename[file_type_index:]
-        timestamp = datetime.datetime.now()
-        timestamp_formatted = f'{timestamp.strftime("%Y-%m-%d_%H:%M:%S")}:{timestamp.microsecond // 1000:03d}'
-        minio_file_name = f"{source_file_name}_{timestamp_formatted}{file_type}"
+        file_type_index = input_file.filename.rfind(".")
 
-        source_file_path = await self.minio_repository.upload_file(
+        input_file_name, file_type = input_file.filename[:file_type_index], input_file.filename[file_type_index:]
+        input_file_name = input_file_name.replace(" ", "_")[:10]
+
+        timestamp = datetime.datetime.now()
+        timestamp_formatted = f"{timestamp.strftime('%Y-%m-%d_%H:%M:%S')}:{timestamp.microsecond // 1000:03d}"
+        minio_file_name = f"{input_file_name}_{timestamp_formatted}{file_type}"
+
+        input_file_url = await self.minio_repository.upload_file(
             target_bucket=self.settings.MINIO_IMAGES_BUCKET,
             file_name=minio_file_name,
-            file_content=source_file.file,
-            file_size=source_file.size,
-            content_type=source_file.content_type
+            file_content=input_file.file,
+            file_size=input_file.size,
+            content_type=input_file.content_type
         )
-        metadata = await self.minio_metadata_repository.create_metadata(
+        input_file_metadata = await self.minio_metadata_repository.create_metadata(
             bucket=self.settings.MINIO_IMAGES_BUCKET,
             file_name=minio_file_name,
+        )
+        emotion_files_urls = await self.minio_repository.download_all_deca_emotions(
+            target_bucket=self.settings.MINIO_DECA_EMOTIONS_BUCKET,
         )
 
         task_entity = TaskEntity(
             request_uuid=request_uuid,
-            source_file_metadata=MinioMetadata(
-                bucket=self.settings.MINIO_IMAGES_BUCKET,
-                file_name=minio_file_name,
-            ),
+            input_file_url=input_file_url,
+            emotion_files_urls=emotion_files_urls,
             result_file_metadata=MinioMetadata(
-                bucket=self.settings.MINIO_GLB_BUCKET,
+                bucket=self.settings.MINIO_3D_FILES_BUCKET,
                 file_name="",
             ),
             status=TaskStatus.INITIAL
@@ -104,7 +108,7 @@ class TaskControllerImpl(TaskController):
                 request_uuid=request_uuid,
                 status=task_entity.status,
                 user_id=user_id,
-                source_file_metadata_id=metadata.id,
+                input_file_metadata_id=input_file_metadata.id,
                 result_file_metadata_id=None,
             )
         )
@@ -120,5 +124,5 @@ class TaskControllerImpl(TaskController):
 
         return CreateTaskResponse(
             request_uuid=str(request_uuid),
-            source_file_path=str(source_file_path),
+            source_file_path=str(input_file_url),
         )
