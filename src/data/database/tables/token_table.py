@@ -6,7 +6,7 @@ from src.domain.entities import TokenType
 
 
 class TokenTable(BaseTable):
-    __tablename__ = "user_info"
+    __tablename__ = "tokens"
 
     token = Column(
         "token",

@@ -3,8 +3,8 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from starlette.responses import JSONResponse
 
-from src.domain.controllers.authorization.authorization_controller import AuthorizationController
-from src.domain.controllers.user_info.user_info_controller import UserInfoController
+from src.domain.controllers import AuthorizationController, AuthorizationControllerImpl
+from src.domain.controllers import UserInfoController, UserInfoControllerImpl
 from src.domain.entities import TokenType
 from src.presentation.responses.user_info.get_user_generation_history_response import GetUserGenerationHistoryResponse
 
@@ -23,8 +23,8 @@ user_info_router = APIRouter(
 )
 async def get_user_generation_history(
     access_token: str = Header(),
-    auth_controller: AuthorizationController = Depends(AuthorizationController),
-    user_info_controller: UserInfoController = Depends(UserInfoController),
+    auth_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
+    user_info_controller: UserInfoController = Depends(UserInfoControllerImpl),
 ):
     token_validation_result = await auth_controller.validate_token(access_token, TokenType.ACCESS)
     if token_validation_result.status_code != status.HTTP_200_OK:

@@ -33,7 +33,7 @@ class TokensRepositoryImpl(TokensRepository, SessionProviderMixin):
         token_type: TokenType,
         session: AsyncSession = None,
     ) -> Optional[int]:
-        token_query = select(TokenTable).where(
+        token_query = select(TokenTable.user_id).where(
             TokenTable.token == token,
             TokenTable.type == token_type,
         )
