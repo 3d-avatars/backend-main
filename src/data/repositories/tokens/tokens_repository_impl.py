@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
 from src.data.database.connection import SessionProviderMixin
-from src.data.database.tables.token_table import TokenTable
+from src.data.database.tables import TokenTable
 from src.data.repositories.tokens.tokens_repository import TokensRepository
 from src.domain.entities import TokenType
 

@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 
 from config import get_settings
 from src.data.database.tables import UserTable
-from src.data.database.tables.token_table import TokenTable
+from src.data.database.tables import TokenTable
 from src.data.repositories import TokensRepository, TokensRepositoryImpl
 from src.data.repositories import UsersRepository, UsersRepositoryImpl
 from src.domain.controllers import AuthorizationController
@@ -106,7 +106,7 @@ class AuthorizationControllerImpl(AuthorizationController):
             secret_key=self.config.SECRET_KEY,
             expires_delta=timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MINUTES),
         )
-        
+
         await self.tokens_repository.add_token(
             token=TokenTable(
                 token=new_access_token,

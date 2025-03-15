@@ -1,7 +1,6 @@
 import logging
-from email.header import Header
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from starlette.responses import JSONResponse
 
 from src.domain.controllers.authorization.authorization_controller import AuthorizationController

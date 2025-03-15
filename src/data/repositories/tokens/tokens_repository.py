@@ -3,7 +3,7 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.data.database.tables.token_table import TokenTable
+from src.data.database.tables import TokenTable
 from src.domain.entities import TokenType
 
 
