@@ -34,6 +34,7 @@ class AuthorizationControllerImpl(AuthorizationController):
 
     async def register_user(
         self,
+        name: str,
         email: str,
         password: str
     ) -> Optional[RegistrationResponse]:
@@ -42,6 +43,7 @@ class AuthorizationControllerImpl(AuthorizationController):
             return None
 
         user = UserTable(
+            name=name,
             email=email,
             hashed_password=self.crypt_context.hash(password)
         )

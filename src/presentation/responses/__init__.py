@@ -6,6 +6,7 @@ from src.presentation.responses.task.get_task_result_response import GetTaskResu
 from src.presentation.responses.task.get_task_status_response import GetTaskStatusResponse
 from src.presentation.responses.user_info.get_user_generation_history_response import GetUserGenerationHistoryResponse, \
     UserGenerationHistoryItem
+from src.presentation.responses.user_info.get_user_profile_info_response import GetUserProfileInfoResponse
 
 __all__ = [
     "CreateTaskResponse",
@@ -15,5 +16,7 @@ __all__ = [
     "TokenValidationResponse",
     "RegistrationResponse",
     "GetUserGenerationHistoryResponse",
-    "UserGenerationHistoryItem"
+    "UserGenerationHistoryItem",
+    "GetUserProfileInfoResponse"
 ]
+

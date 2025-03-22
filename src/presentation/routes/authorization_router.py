@@ -28,7 +28,7 @@ async def registration(
     authorization_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
 ):
     try:
-        result = await authorization_controller.register_user(body.email, body.password)
+        result = await authorization_controller.register_user(body.name, body.email, body.password)
     except Exception as e:
         logger.exception(e)
         raise HTTPException(

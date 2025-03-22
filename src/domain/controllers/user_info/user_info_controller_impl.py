@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from typing import Optional, List
 
 from fastapi.params import Depends
@@ -11,6 +10,7 @@ from src.data.repositories import UsersRepository, UsersRepositoryImpl
 from src.domain.controllers.user_info.user_info_controller import UserInfoController
 from src.domain.entities import TokenType
 from src.presentation.responses import GetUserGenerationHistoryResponse, UserGenerationHistoryItem
+from src.presentation.responses import GetUserProfileInfoResponse
 
 
 class UserInfoControllerImpl(UserInfoController):
@@ -31,12 +31,11 @@ class UserInfoControllerImpl(UserInfoController):
 
     async def get_user_generation_history(
         self,
-        token: str,
-        token_type: TokenType,
+        access_token: str,
     ) -> Optional[GetUserGenerationHistoryResponse]:
         user_id = await self.tokens_repository.get_user_id_by_token(
-            token=token,
-            token_type=token_type,
+            token=access_token,
+            token_type=TokenType.ACCESS,
         )
 
         user = await self.users_repository.get_user_by_id(user_id)
@@ -66,4 +65,37 @@ class UserInfoControllerImpl(UserInfoController):
 
         return GetUserGenerationHistoryResponse(
             items=history_items,
+        )
+
+    async def get_user_profile_info(
+        self,
+        access_token: str,
+    ) -> Optional[GetUserProfileInfoResponse]:
+        user_id = await self.tokens_repository.get_user_id_by_token(
+            token=access_token,
+            token_type=TokenType.ACCESS,
+        )
+
+        user = await self.users_repository.get_user_by_id(user_id)
+        if user is None:
+            return None
+
+        task = await self.tasks_repository.get_first_task_of_user(user.id)
+
+        input_image_url = ""
+        user_name = user.name if user.name is not None else ""
+
+        if task is not None:
+            input_image_metadata = await self.minio_metadata_repository.get_metadata(task.input_file_metadata_id)
+
+            if input_image_metadata is not None:
+                input_image_url = await self.minio_repository.download_file(
+                    target_bucket=input_image_metadata.bucket,
+                    file_name=input_image_metadata.file_name,
+                )
+
+        return GetUserProfileInfoResponse(
+            name=user_name,
+            email=user.email,
+            image_url=input_image_url,
         )

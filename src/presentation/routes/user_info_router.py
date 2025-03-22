@@ -6,7 +6,8 @@ from starlette.responses import JSONResponse
 from src.domain.controllers import AuthorizationController, AuthorizationControllerImpl
 from src.domain.controllers import UserInfoController, UserInfoControllerImpl
 from src.domain.entities import TokenType
-from src.presentation.responses.user_info.get_user_generation_history_response import GetUserGenerationHistoryResponse
+from src.presentation.responses import GetUserGenerationHistoryResponse
+from src.presentation.responses import GetUserProfileInfoResponse
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +36,7 @@ async def get_user_generation_history(
 
     try:
         generation_history_response = await user_info_controller.get_user_generation_history(
-            token=access_token,
-            token_type=TokenType.ACCESS
+            access_token=access_token,
         )
     except Exception as e:
         logger.exception(e)
@@ -55,3 +55,44 @@ async def get_user_generation_history(
         status_code=status.HTTP_200_OK,
         content=generation_history_response.model_dump()
     )
+
+@user_info_router.get(
+    path="/profile-info",
+    description="Get history of user's generation tasks",
+    status_code=status.HTTP_200_OK,
+    response_model=GetUserProfileInfoResponse,
+)
+async def get_user_profile_info(
+    access_token: str = Header(),
+    auth_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
+    user_info_controller: UserInfoController = Depends(UserInfoControllerImpl),
+):
+    token_validation_result = await auth_controller.validate_token(access_token, TokenType.ACCESS)
+    if token_validation_result.status_code != status.HTTP_200_OK:
+        raise HTTPException(
+            status_code=token_validation_result.status_code,
+            detail=token_validation_result.detail,
+        )
+
+    try:
+        user_profile_info_response = await user_info_controller.get_user_profile_info(
+            access_token=access_token,
+        )
+    except Exception as e:
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong",
+        )
+
+    if user_profile_info_response is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Didnt find history for this user"
+        )
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=user_profile_info_response.model_dump()
+    )
+
