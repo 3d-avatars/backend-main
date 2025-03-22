@@ -7,6 +7,15 @@ from src.data.database.tables import BaseTable
 class UserTable(BaseTable):
     __tablename__ = "user"
 
+    name = Column(
+        "name",
+        TEXT,
+        nullable=True,
+        unique=False,
+        default="",
+        doc="User's name"
+    )
+
     email = Column(
         "email",
         TEXT,

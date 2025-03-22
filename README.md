@@ -1,4 +1,18 @@
-# How to run?
+# README
+
+## Description
+
+This repository contains source code of backend system for 3D Avatar Generation service. It consists of four parts:
+* HTTP API made with FastAPI. It is used for interaction with frontend.
+* RabbitMQ message broker. It is used for communication with ml-workers (aka ml-agents) 
+* PostgreSQL database. It is used for storing user information, tasks and media metadata
+* MinIO S3 storage. It is used for storing media data, such as images uploaded by users and generated 3D models
+
+Overall architecture diagram is show below
+
+![architecture_diagram](assets/architecture.png)
+
+## How to run?
 
 1. Go to project root
 
@@ -31,7 +45,7 @@ make migrate
 
 8. API Swagger is accessible via `http://{APP_HOST}:8080/docs` link
 
-# Project Structure
+## Project Structure
 
 ```
 .

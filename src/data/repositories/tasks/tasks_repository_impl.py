@@ -20,7 +20,6 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         self,
         session: AsyncSession = None,
     ) -> List[TaskTable]:
-
         task_query = select(TaskTable)
         result = list(
             (await session.execute(task_query)).scalars().all()
@@ -31,7 +30,37 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         return result
 
     @SessionProviderMixin.session_provider
-    async def get_task(
+    async def get_tasks_by_user_id(
+        self,
+        user_id: int,
+        session: AsyncSession = None,
+    ) -> List[TaskTable]:
+        task_query = select(TaskTable).where(TaskTable.user_id == user_id)
+        result = list(
+            (await session.execute(task_query)).scalars().all()
+        )
+        await session.commit()
+
+        logger.info(f"Selected tasks {result}")
+        return result
+
+    @SessionProviderMixin.session_provider
+    async def get_first_task_of_user(
+        self,
+        user_id: int,
+        session: AsyncSession = None,
+    ) -> Optional[TaskTable]:
+        task_query = select(TaskTable).where(TaskTable.user_id == user_id).limit(1)
+        result: Optional[TaskTable] = (await session.execute(task_query)).scalar()
+
+        await session.commit()
+
+        logger.info(f"Selected task {result}")
+        return result
+
+
+    @SessionProviderMixin.session_provider
+    async def get_task_by_request_uuid(
         self,
         request_uuid: uuid.UUID,
         session: AsyncSession = None
@@ -81,7 +110,7 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         request_uuid: uuid.UUID,
         session: AsyncSession = None,
     ) -> Optional[TaskTable]:
-        result = self.get_task(request_uuid)
+        result = self.get_task_by_request_uuid(request_uuid)
         if result is None:
             return None
 

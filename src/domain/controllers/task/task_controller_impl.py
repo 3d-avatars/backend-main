@@ -38,7 +38,7 @@ class TaskControllerImpl(TaskController):
         self,
         task_request_uuid: uuid.UUID
     ) -> Optional[GetTaskStatusResponse]:
-        task = await self.task_repository.get_task(request_uuid=task_request_uuid)
+        task = await self.task_repository.get_task_by_request_uuid(request_uuid=task_request_uuid)
         if task is None:
             return None
 
@@ -48,7 +48,7 @@ class TaskControllerImpl(TaskController):
         self,
         task_request_uuid: uuid.UUID
     ) -> Optional[GetTaskResultResponse]:
-        task = await self.task_repository.get_task(request_uuid=task_request_uuid)
+        task = await self.task_repository.get_task_by_request_uuid(request_uuid=task_request_uuid)
         result_file_id = task.result_file_metadata_id
 
         if result_file_id is None:
@@ -74,7 +74,7 @@ class TaskControllerImpl(TaskController):
         input_file_name = input_file_name.replace(" ", "_")[:10]
 
         timestamp = datetime.datetime.now()
-        timestamp_formatted = f"{timestamp.strftime('%Y-%m-%d_%H:%M:%S')}:{timestamp.microsecond // 1000:03d}"
+        timestamp_formatted = f"{timestamp.strftime('%Y-%m-%d_%H-%M-%S')}-{timestamp.microsecond // 1000:03d}"
         minio_file_name = f"{input_file_name}_{timestamp_formatted}{file_type}"
 
         input_file_url = await self.minio_repository.upload_file(

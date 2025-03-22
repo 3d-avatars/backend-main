@@ -14,12 +14,26 @@ logger = logging.getLogger(__name__)
 class UsersRepositoryImpl(UsersRepository, SessionProviderMixin):
 
     @SessionProviderMixin.session_provider
-    async def get_user(
+    async def get_user_by_email(
         self,
         user_email: str,
         session: AsyncSession = None,
     ) -> Optional[UserTable]:
         user_query = select(UserTable).where(UserTable.email == user_email)
+        result: Optional[UserTable] = (await session.execute(user_query)).scalar()
+
+        await session.commit()
+
+        logger.info(f"Selected user {result}")
+        return result
+
+    @SessionProviderMixin.session_provider
+    async def get_user_by_id(
+        self,
+        user_id: int,
+        session: AsyncSession = None,
+    ) -> Optional[UserTable]:
+        user_query = select(UserTable).where(UserTable.id == user_id)
         result: Optional[UserTable] = (await session.execute(user_query)).scalar()
 
         await session.commit()

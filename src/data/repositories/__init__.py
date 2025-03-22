@@ -6,6 +6,8 @@ from src.data.repositories.queue.queue_repository import QueueRepository
 from src.data.repositories.queue.queue_repository_impl import QueueRepositoryImpl
 from src.data.repositories.tasks.tasks_repository import TasksRepository
 from src.data.repositories.tasks.tasks_repository_impl import TasksRepositoryImpl
+from src.data.repositories.tokens.tokens_repository import TokensRepository
+from src.data.repositories.tokens.tokens_repository_impl import TokensRepositoryImpl
 from src.data.repositories.users.users_repository import UsersRepository
 from src.data.repositories.users.users_repository_impl import UsersRepositoryImpl
 
@@ -20,4 +22,6 @@ __all__ = [
     "TasksRepositoryImpl",
     "UsersRepository",
     "UsersRepositoryImpl",
+    "TokensRepository",
+    "TokensRepositoryImpl",
 ]

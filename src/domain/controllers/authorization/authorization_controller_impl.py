@@ -8,6 +8,8 @@ from passlib.context import CryptContext
 
 from config import get_settings
 from src.data.database.tables import UserTable
+from src.data.database.tables import TokenTable
+from src.data.repositories import TokensRepository, TokensRepositoryImpl
 from src.data.repositories import UsersRepository, UsersRepositoryImpl
 from src.domain.controllers import AuthorizationController
 from src.domain.entities import TokenPayload, TokenType
@@ -23,21 +25,25 @@ class AuthorizationControllerImpl(AuthorizationController):
     def __init__(
         self,
         users_repository: UsersRepository = Depends(UsersRepositoryImpl),
+        tokens_repository: TokensRepository = Depends(TokensRepositoryImpl),
     ):
         self.config = get_settings()
         self.crypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
         self.users_repository = users_repository
+        self.tokens_repository = tokens_repository
 
     async def register_user(
         self,
+        name: str,
         email: str,
         password: str
     ) -> Optional[RegistrationResponse]:
-        user = await self.users_repository.get_user(email)
+        user = await self.users_repository.get_user_by_email(email)
         if user is not None:
             return None
 
         user = UserTable(
+            name=name,
             email=email,
             hashed_password=self.crypt_context.hash(password)
         )
@@ -50,22 +56,40 @@ class AuthorizationControllerImpl(AuthorizationController):
         email: str,
         password: str,
     ) -> Optional[TokenPairResponse]:
-        user = await self.users_repository.get_user(email)
+        user = await self.users_repository.get_user_by_email(email)
 
         if user is not None and self.crypt_context.verify(password, user.hashed_password):
-            return TokenPairResponse(
-                access_token=self.__create_token(
+            access_token = self.__create_token(
+                user_id=user.id,
+                user_email=user.email,
+                secret_key=self.config.SECRET_KEY,
+                expires_delta=timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MINUTES),
+            )
+            refresh_token = self.__create_token(
+                user_id=user.id,
+                user_email=user.email,
+                secret_key=self.config.REFRESH_SECRET_KEY,
+                expires_delta=timedelta(minutes=self.config.REFRESH_TOKEN_EXPIRE_MINUTES),
+            )
+
+            await self.tokens_repository.add_token(
+                token=TokenTable(
+                    token=access_token,
+                    type=TokenType.ACCESS,
                     user_id=user.id,
-                    user_email=user.email,
-                    secret_key=self.config.SECRET_KEY,
-                    expires_delta=timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MINUTES),
-                ),
-                refresh_token=self.__create_token(
-                    user_id=user.id,
-                    user_email=user.email,
-                    secret_key=self.config.REFRESH_SECRET_KEY,
-                    expires_delta=timedelta(minutes=self.config.REFRESH_TOKEN_EXPIRE_MINUTES),
                 )
+            )
+            await self.tokens_repository.add_token(
+                token=TokenTable(
+                    token=refresh_token,
+                    type=TokenType.REFRESH,
+                    user_id=user.id,
+                )
+            )
+
+            return TokenPairResponse(
+                access_token=access_token,
+                refresh_token=refresh_token,
             )
         else:
             return None
@@ -84,6 +108,15 @@ class AuthorizationControllerImpl(AuthorizationController):
             secret_key=self.config.SECRET_KEY,
             expires_delta=timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MINUTES),
         )
+
+        await self.tokens_repository.add_token(
+            token=TokenTable(
+                token=new_access_token,
+                type=TokenType.ACCESS,
+                user_id=token_validation_result.token_payload.user_id,
+            )
+        )
+
         return TokenPairResponse(
             access_token=new_access_token,
             refresh_token=refresh_token
@@ -100,34 +133,50 @@ class AuthorizationControllerImpl(AuthorizationController):
             payload = jwt.decode(
                 token=token,
                 key=secret_key,
-                algorithms=[self.config.HASH_ALGORITHM]
+                algorithms=[self.config.HASH_ALGORITHM],
             )
             token_payload = TokenPayload(**payload)
 
             if datetime.fromtimestamp(token_payload.expire_timestamp) < datetime.now():
+                await self.tokens_repository.delete_token(
+                    token=token,
+                    token_type=token_type,
+                )
+
                 return TokenValidationResponse(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token expired"
+                    detail="Token expired",
                 )
 
         except Exception as e:
             logger.exception(e)
             return TokenValidationResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Failed to validate the token"
+                detail="Failed to validate the token",
             )
 
-        user = await self.users_repository.get_user(token_payload.user_email)
+        user = await self.users_repository.get_user_by_email(token_payload.user_email)
         if user is None:
             return TokenValidationResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid token"
+                detail="Invalid token",
+            )
+
+        user_id = await self.tokens_repository.get_user_id_by_token(
+            token=token,
+            token_type=token_type,
+        )
+
+        if user_id is None or user.id != user_id:
+            return TokenValidationResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid token",
             )
 
         return TokenValidationResponse(
             token_payload=token_payload,
             status_code=status.HTTP_200_OK,
-            detail=""
+            detail="",
         )
 
     def __create_token(

@@ -17,7 +17,7 @@ env: ##@ Copy env from example files
 	cp log_conf_example.yaml log_conf.yaml
 
 deploy: ##@ Set up docker environment
-	docker-compose -f ./deployment/docker-compose.yml up --build --remove-orphans
+	docker compose -f ./deployment/docker-compose.yml up --build --remove-orphans
 
 revision:  ##@Database Create new revision file automatically with prefix (ex. 2022_01_01_14cs34f_message.py)
 	alembic revision --autogenerate

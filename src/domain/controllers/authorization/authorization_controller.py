@@ -12,6 +12,7 @@ class AuthorizationController(ABC):
     @abstractmethod
     async def register_user(
         self,
+        name: str,
         email: str,
         password: str
     ) -> Optional[RegistrationResponse]:
