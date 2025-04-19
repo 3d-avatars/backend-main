@@ -1,5 +1,5 @@
-from fastapi import HTTPException, status
-
+from fastapi import HTTPException
+from fastapi import status
 
 SESSION_DB_VAR_NAME = 'session'
 

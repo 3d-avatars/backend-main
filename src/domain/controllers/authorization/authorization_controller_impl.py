@@ -1,18 +1,24 @@
 import logging
-from datetime import timedelta, datetime, timezone
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 from typing import Optional
 
-from fastapi import Depends, status
+from fastapi import Depends
+from fastapi import status
 from jose import jwt
 from passlib.context import CryptContext
 
 from config import get_settings
-from src.data.database.tables import UserTable
 from src.data.database.tables import TokenTable
-from src.data.repositories import TokensRepository, TokensRepositoryImpl
-from src.data.repositories import UsersRepository, UsersRepositoryImpl
+from src.data.database.tables import UserTable
+from src.data.repositories import TokensRepository
+from src.data.repositories import TokensRepositoryImpl
+from src.data.repositories import UsersRepository
+from src.data.repositories import UsersRepositoryImpl
 from src.domain.controllers import AuthorizationController
-from src.domain.entities import TokenPayload, TokenType
+from src.domain.entities import TokenPayload
+from src.domain.entities import TokenType
 from src.presentation.responses import RegistrationResponse
 from src.presentation.responses import TokenPairResponse
 from src.presentation.responses import TokenValidationResponse

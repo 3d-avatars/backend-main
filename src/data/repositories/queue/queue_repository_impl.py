@@ -3,7 +3,7 @@ import logging
 from aio_pika import Message
 
 from config import get_settings
-from src.data.queue import AMQPChannelManager
+from src.data.message_broker import AMQPChannelManager
 from src.data.repositories import QueueRepository
 
 logger = logging.getLogger(__name__)

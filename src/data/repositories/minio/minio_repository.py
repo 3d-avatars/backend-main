@@ -1,5 +1,6 @@
 from abc import abstractmethod
-from typing import BinaryIO, List
+from typing import BinaryIO
+from typing import List
 
 
 class MinioRepository:

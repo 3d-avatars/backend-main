@@ -1,9 +1,10 @@
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from typing import Optional
 
 from src.domain.entities import TokenType
-from src.presentation.responses import TokenPairResponse
 from src.presentation.responses import RegistrationResponse
+from src.presentation.responses import TokenPairResponse
 from src.presentation.responses.authorization.token_validation_response import TokenValidationResponse
 
 

@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Enum, ForeignKey
+from sqlalchemy import Column
+from sqlalchemy import Enum
+from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import TEXT
 
 from src.data.database.tables import BaseTable

@@ -2,7 +2,8 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 import aio_pika
-from aio_pika.abc import AbstractRobustConnection, AbstractRobustChannel
+from aio_pika.abc import AbstractRobustChannel
+from aio_pika.abc import AbstractRobustConnection
 
 from config import get_settings
 

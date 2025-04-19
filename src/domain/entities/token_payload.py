@@ -2,6 +2,7 @@ from enum import Enum
 
 from pydantic import BaseModel
 
+
 class TokenType(str, Enum):
     ACCESS = "ACCESS"
     REFRESH = "REFRESH"
