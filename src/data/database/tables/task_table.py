@@ -1,4 +1,7 @@
-from sqlalchemy import Column, Enum, ForeignKey, BIGINT
+from sqlalchemy import BIGINT
+from sqlalchemy import Column
+from sqlalchemy import Enum
+from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 
 from src.data.database.tables import BaseTable
@@ -27,7 +30,7 @@ class TaskTable(BaseTable):
     user_id = Column(
         "user_id",
         ForeignKey("user.id"),
-        nullable=False,
+        nullable=True,
         doc="Id of user that made this request"
     )
 
@@ -47,4 +50,13 @@ class TaskTable(BaseTable):
         nullable=True,
         unique=True,
         doc="S3 metadata for result file",
+    )
+
+    mesh_metadata_id = Column(
+        "mesh_metadata_id",
+        BIGINT,
+        ForeignKey("mesh_metadata.id"),
+        nullable=True,
+        unique=True,
+        doc="3D model metadata"
     )

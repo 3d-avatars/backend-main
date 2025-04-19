@@ -17,6 +17,5 @@ __all__ = [
     "RegistrationResponse",
     "GetUserGenerationHistoryResponse",
     "UserGenerationHistoryItem",
-    "GetUserProfileInfoResponse"
+    "GetUserProfileInfoResponse",
 ]
-

@@ -3,18 +3,30 @@ import logging
 import uuid
 from typing import Optional
 
-from fastapi import Depends, UploadFile
+from fastapi import Depends
+from fastapi import UploadFile
 
 from config import get_settings
 from src.data.database.tables import TaskTable
-from src.data.repositories import MinioMetadataRepository, MinioMetadataRepositoryImpl
-from src.data.repositories import MinioRepository, MinioRepositoryImpl
-from src.data.repositories import QueueRepository, QueueRepositoryImpl
-from src.data.repositories import TasksRepository, TasksRepositoryImpl
-from src.domain.entities import TaskEntity, MinioMetadata
-from src.domain.entities import TaskStatus
+from src.data.repositories import MeshMetadataRepository
+from src.data.repositories import MeshMetadataRepositoryImpl
+from src.data.repositories import MinioMetadataRepository
+from src.data.repositories import MinioMetadataRepositoryImpl
+from src.data.repositories import MinioRepository
+from src.data.repositories import MinioRepositoryImpl
+from src.data.repositories import QueueRepository
+from src.data.repositories import QueueRepositoryImpl
+from src.data.repositories import TasksRepository
+from src.data.repositories import TasksRepositoryImpl
 from src.domain.controllers import TaskController
-from src.presentation.responses import CreateTaskResponse, GetTaskResultResponse, GetTaskStatusResponse
+from src.domain.entities import MeshMetadata
+from src.domain.entities import TaskClientType
+from src.domain.entities import TaskInputMetadata
+from src.domain.entities import TaskRequestEntity
+from src.domain.entities import TaskStatus
+from src.presentation.responses import CreateTaskResponse
+from src.presentation.responses import GetTaskResultResponse
+from src.presentation.responses import GetTaskStatusResponse
 
 logger = logging.getLogger(__name__)
 
@@ -23,16 +35,18 @@ class TaskControllerImpl(TaskController):
 
     def __init__(
         self,
+        task_queue: QueueRepository = Depends(QueueRepositoryImpl),
+        task_repository: TasksRepository = Depends(TasksRepositoryImpl),
         minio_repository: MinioRepository = Depends(MinioRepositoryImpl),
         minio_metadata_repository: MinioMetadataRepository = Depends(MinioMetadataRepositoryImpl),
-        task_repository: TasksRepository = Depends(TasksRepositoryImpl),
-        task_queue: QueueRepository = Depends(QueueRepositoryImpl),
+        mesh_metadata_repository: MeshMetadataRepository = Depends(MeshMetadataRepositoryImpl),
     ):
         self.settings = get_settings()
-        self.minio_repository = minio_repository
-        self.task_repository = task_repository
-        self.minio_metadata_repository = minio_metadata_repository
         self.task_queue = task_queue
+        self.task_repository = task_repository
+        self.minio_repository = minio_repository
+        self.minio_metadata_repository = minio_metadata_repository
+        self.mesh_metadata_repository = mesh_metadata_repository
 
     async def get_task_status(
         self,
@@ -49,8 +63,8 @@ class TaskControllerImpl(TaskController):
         task_request_uuid: uuid.UUID
     ) -> Optional[GetTaskResultResponse]:
         task = await self.task_repository.get_task_by_request_uuid(request_uuid=task_request_uuid)
-        result_file_id = task.result_file_metadata_id
 
+        result_file_id = task.result_file_metadata_id
         if result_file_id is None:
             return None
 
@@ -60,11 +74,25 @@ class TaskControllerImpl(TaskController):
             file_name=result_file_metadata.file_name,
         )
 
-        return GetTaskResultResponse(result_file_path=result_file_url)
+        mesh_metadata_id = task.mesh_metadata_id
+        if mesh_metadata_id is None:
+            mesh_metadata = None
+        else:
+            mesh_metadata_raw = await self.mesh_metadata_repository.get_metadata(
+                metadata_id=mesh_metadata_id
+            )
+            mesh_metadata = MeshMetadata(
+                skin_color_hex=mesh_metadata_raw.skin_color_hex,
+            )
+
+        return GetTaskResultResponse(
+            result_file_path=result_file_url,
+            mesh_metadata=mesh_metadata
+        )
 
     async def create_task(
         self,
-        user_id: int,
+        user_id: Optional[int],
         input_file: UploadFile,
     ) -> CreateTaskResponse:
         request_uuid = uuid.uuid4()
@@ -92,29 +120,29 @@ class TaskControllerImpl(TaskController):
             target_bucket=self.settings.MINIO_DECA_EMOTIONS_BUCKET,
         )
 
-        task_entity = TaskEntity(
+        task_request = TaskRequestEntity(
             request_uuid=request_uuid,
-            input_file_url=input_file_url,
-            emotion_files_urls=emotion_files_urls,
-            result_file_metadata=MinioMetadata(
-                bucket=self.settings.MINIO_3D_FILES_BUCKET,
-                file_name="",
+            task_client_type=TaskClientType.WEB_SERVICE,
+            task_input_metadata=TaskInputMetadata(
+                input_file_url=input_file_url,
+                emotions_files_urls=emotion_files_urls,
+                output_bucket=self.settings.MINIO_3D_FILES_BUCKET
             ),
-            status=TaskStatus.INITIAL
         )
 
         await self.task_repository.create_task(
             task=TaskTable(
                 request_uuid=request_uuid,
-                status=task_entity.status,
+                status=TaskStatus.INITIAL,
                 user_id=user_id,
                 input_file_metadata_id=input_file_metadata.id,
                 result_file_metadata_id=None,
+                mesh_metadata_id=None,
             )
         )
 
         await self.task_queue.push_message(
-            task_entity.model_dump_json()
+            task_request.model_dump_json()
         )
 
         await self.task_repository.update_task(

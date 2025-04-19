@@ -1,5 +1,6 @@
 import uuid
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from typing import Optional
 
 from fastapi import UploadFile
@@ -28,7 +29,7 @@ class TaskController(ABC):
     @abstractmethod
     async def create_task(
         self,
-        user_id: int,
+        user_id: Optional[int],
         input_file: UploadFile,
     ) -> CreateTaskResponse:
         raise NotImplementedError
