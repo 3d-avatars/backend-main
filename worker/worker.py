@@ -57,25 +57,24 @@ class Worker:
         if isinstance(decoded_task, TaskProgressEntity):
             await self.task_repository.update_task(
                 request_uuid=decoded_task.request_uuid,
-                status=decoded_task.status
+                status=decoded_task.status,
             )
             logger.info(f"Updated task status {decoded_task.request_uuid} to {decoded_task.status}")
 
         elif isinstance(decoded_task, TaskResultEntity):
-            task_result_metadata = decoded_task.task_result_metadata
             minio_metadata = await self.minio_metadata_repository.create_metadata(
-                bucket=task_result_metadata.minio_metadata.bucket,
-                file_name=task_result_metadata.minio_metadata.file_name
+                bucket=decoded_task.minio_metadata.bucket,
+                file_name=decoded_task.minio_metadata.file_name,
             )
             mesh_metadata = await self.mesh_metadata_repository.create_metadata(
-                skin_color_hex=task_result_metadata.mesh_metadata.skin_color_hex,
+                skin_color_hex=decoded_task.mesh_metadata.skin_color_hex,
             )
 
             await self.task_repository.update_task(
                 request_uuid=decoded_task.request_uuid,
                 status=TaskStatus.SUCCESS,
                 result_file_metadata_id=minio_metadata.id,
-                mesh_metadata_id=mesh_metadata.id
+                mesh_metadata_id=mesh_metadata.id,
             )
             logger.info(f"Updated task status {decoded_task.request_uuid} to SUCCESS")
 
