@@ -10,6 +10,7 @@ from starlette.responses import JSONResponse
 
 from src.domain.controllers import TaskController
 from src.domain.controllers import TaskControllerImpl
+from src.domain.entities import TaskClientType
 from src.domain.entities import TaskStatus
 from src.presentation.responses import CreateTaskResponse
 from src.presentation.responses import GetTaskResultResponse
@@ -40,6 +41,7 @@ async def create_task(
         task_response = await task_controller.create_task(
             user_id=None,
             input_file=task_source_file,
+            client_type=TaskClientType.EXTERNAL_INTEGRATION,
         )
     except Exception as e:
         logger.exception(e)

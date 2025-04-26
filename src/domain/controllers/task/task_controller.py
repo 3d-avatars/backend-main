@@ -5,6 +5,7 @@ from typing import Optional
 
 from fastapi import UploadFile
 
+from src.domain.entities import TaskClientType
 from src.presentation.responses import CreateTaskResponse
 from src.presentation.responses import GetTaskResultResponse
 from src.presentation.responses import GetTaskStatusResponse
@@ -31,5 +32,6 @@ class TaskController(ABC):
         self,
         user_id: Optional[int],
         input_file: UploadFile,
+        client_type: TaskClientType,
     ) -> CreateTaskResponse:
         raise NotImplementedError

@@ -94,6 +94,7 @@ class TaskControllerImpl(TaskController):
         self,
         user_id: Optional[int],
         input_file: UploadFile,
+        client_type: TaskClientType,
     ) -> CreateTaskResponse:
         request_uuid = uuid.uuid4()
         file_type_index = input_file.filename.rfind(".")
@@ -122,7 +123,7 @@ class TaskControllerImpl(TaskController):
 
         task_request = TaskRequestEntity(
             request_uuid=request_uuid,
-            task_client_type=TaskClientType.WEB_SERVICE,
+            task_client_type=client_type,
             task_input_metadata=TaskInputMetadata(
                 input_file_url=input_file_url,
                 emotions_files_urls=emotion_files_urls,

@@ -13,6 +13,7 @@ from src.domain.controllers import AuthorizationController
 from src.domain.controllers import AuthorizationControllerImpl
 from src.domain.controllers import TaskController
 from src.domain.controllers import TaskControllerImpl
+from src.domain.entities import TaskClientType
 from src.domain.entities import TaskStatus
 from src.domain.entities import TokenType
 from src.presentation.responses import CreateTaskResponse
@@ -50,6 +51,7 @@ async def create_task(
         task_response = await task_controller.create_task(
             user_id=token_validation_result.token_payload.user_id,
             input_file=task_source_file,
+            client_type=TaskClientType.WEB_SERVICE,
         )
     except Exception as e:
         logger.exception(e)
