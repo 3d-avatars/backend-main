@@ -21,7 +21,7 @@ class MinioMetadataRepositoryImpl(MinioMetadataRepository, SessionProviderMixin)
     ) -> Optional[MinioMetadataTable]:
         metadata: Optional[MinioMetadataTable] = await session.get(MinioMetadataTable, metadata_id)
         await session.commit()
-        logger.info(f"Selected metadata {metadata}")
+        logger.info(f"Selected minio metadata {metadata}")
         return metadata
 
     @SessionProviderMixin.session_provider
@@ -35,7 +35,7 @@ class MinioMetadataRepositoryImpl(MinioMetadataRepository, SessionProviderMixin)
         session.add(new_metadata)
         await session.commit()
 
-        logger.info(f"Created new metadata {new_metadata}")
+        logger.info(f"Created new minio metadata {new_metadata}")
         return new_metadata
 
     @SessionProviderMixin.session_provider
@@ -54,5 +54,5 @@ class MinioMetadataRepositoryImpl(MinioMetadataRepository, SessionProviderMixin)
         update_result: Optional[MinioMetadataTable] = (await session.execute(query)).scalar()
         await session.commit()
 
-        logger.info(f"Updated metadata {update_result}")
+        logger.info(f"Updated minio metadata {update_result}")
         return update_result

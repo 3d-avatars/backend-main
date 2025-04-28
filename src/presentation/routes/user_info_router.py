@@ -1,10 +1,16 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Header
+from fastapi import status
 from starlette.responses import JSONResponse
 
-from src.domain.controllers import AuthorizationController, AuthorizationControllerImpl
-from src.domain.controllers import UserInfoController, UserInfoControllerImpl
+from src.domain.controllers import AuthorizationController
+from src.domain.controllers import AuthorizationControllerImpl
+from src.domain.controllers import UserInfoController
+from src.domain.controllers import UserInfoControllerImpl
 from src.domain.entities import TokenType
 from src.presentation.responses import GetUserGenerationHistoryResponse
 from src.presentation.responses import GetUserProfileInfoResponse
@@ -58,7 +64,7 @@ async def get_user_generation_history(
 
 @user_info_router.get(
     path="/profile-info",
-    description="Get history of user's generation tasks",
+    description="Get user profile info",
     status_code=status.HTTP_200_OK,
     response_model=GetUserProfileInfoResponse,
 )

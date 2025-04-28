@@ -2,12 +2,18 @@ import asyncio
 import logging
 
 from aio_pika.abc import AbstractIncomingMessage
+from pydantic import ValidationError
+from src.data.message_broker import AMQPChannelManager
 
 from config import get_settings
-from src.data.queue import AMQPChannelManager
-from src.data.repositories import MinioMetadataRepository, MinioMetadataRepositoryImpl
-from src.data.repositories import TasksRepository, TasksRepositoryImpl
-from src.domain.entities import TaskEntity
+from src.data.repositories import MeshMetadataRepository
+from src.data.repositories import MeshMetadataRepositoryImpl
+from src.data.repositories import MinioMetadataRepository
+from src.data.repositories import MinioMetadataRepositoryImpl
+from src.data.repositories import TasksRepository
+from src.data.repositories import TasksRepositoryImpl
+from src.domain.entities.task_entity import TaskProgressEntity
+from src.domain.entities.task_entity import TaskResultEntity
 from src.domain.entities.task_entity import TaskStatus
 
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +24,7 @@ class Worker:
         self.channel_manager = AMQPChannelManager()
         self.task_repository: TasksRepository = TasksRepositoryImpl()
         self.minio_metadata_repository: MinioMetadataRepository = MinioMetadataRepositoryImpl()
+        self.mesh_metadata_repository: MeshMetadataRepository = MeshMetadataRepositoryImpl()
 
     async def run(self):
         await self.channel_manager.refresh()
@@ -32,32 +39,44 @@ class Worker:
                 await self.channel_manager.dispose()
 
     async def handle_task_callback(self, message: AbstractIncomingMessage) -> None:
-        decoded_task = TaskEntity.model_validate_json(message.body.decode())
-        result_file_metadata = decoded_task.result_file_metadata
+        decoded_message = message.body.decode()
 
-        if decoded_task.status == TaskStatus.IN_PROGRESS:
+        try:
+            decoded_task = TaskProgressEntity.model_validate_json(decoded_message)
+            logger.error(f"Received task progress entity {decoded_task}")
+
+        except ValidationError:
+            try:
+                decoded_task = TaskResultEntity.model_validate_json(decoded_message)
+                logger.error(f"Received task result entity {decoded_task}")
+
+            except ValidationError:
+                logger.error(f"Failed to validate message {decoded_message}")
+                return
+
+        if isinstance(decoded_task, TaskProgressEntity):
             await self.task_repository.update_task(
                 request_uuid=decoded_task.request_uuid,
-                status=TaskStatus.IN_PROGRESS
+                status=decoded_task.status,
             )
-            logger.info(f"Updated task status {decoded_task.request_uuid} to IN_PROGRESS")
-        elif result_file_metadata is not None:
-            metadata = await self.minio_metadata_repository.create_metadata(
-                bucket=result_file_metadata.bucket,
-                file_name=result_file_metadata.file_name,
+            logger.info(f"Updated task status {decoded_task.request_uuid} to {decoded_task.status}")
+
+        elif isinstance(decoded_task, TaskResultEntity):
+            minio_metadata = await self.minio_metadata_repository.create_metadata(
+                bucket=decoded_task.minio_metadata.bucket,
+                file_name=decoded_task.minio_metadata.file_name,
             )
+            mesh_metadata = await self.mesh_metadata_repository.create_metadata(
+                skin_color_hex=decoded_task.mesh_metadata.skin_color_hex,
+            )
+
             await self.task_repository.update_task(
                 request_uuid=decoded_task.request_uuid,
-                result_file_metadata_id=metadata.id,
-                status=TaskStatus.SUCCESS
+                status=TaskStatus.SUCCESS,
+                result_file_metadata_id=minio_metadata.id,
+                mesh_metadata_id=mesh_metadata.id,
             )
             logger.info(f"Updated task status {decoded_task.request_uuid} to SUCCESS")
-        else:
-            logger.error(f"Failed to retrieve result file metadata from {decoded_task}")
-            await self.task_repository.update_task(
-                request_uuid=decoded_task.request_uuid,
-                status=TaskStatus.FAILED,
-            )
 
         await message.ack()
 

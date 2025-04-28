@@ -1,5 +1,6 @@
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import TIMESTAMP, BIGINT
+from sqlalchemy.dialects.postgresql import BIGINT
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 

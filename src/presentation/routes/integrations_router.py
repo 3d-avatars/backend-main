@@ -6,29 +6,28 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import UploadFile
 from fastapi import status
-from fastapi.params import Header
-from fastapi.responses import JSONResponse
+from starlette.responses import JSONResponse
 
-from src.domain.controllers import AuthorizationController
-from src.domain.controllers import AuthorizationControllerImpl
 from src.domain.controllers import TaskController
 from src.domain.controllers import TaskControllerImpl
 from src.domain.entities import TaskClientType
 from src.domain.entities import TaskStatus
-from src.domain.entities import TokenType
 from src.presentation.responses import CreateTaskResponse
 from src.presentation.responses import GetTaskResultResponse
 from src.presentation.responses import GetTaskStatusResponse
 
 logger = logging.getLogger(__name__)
 
-task_router = APIRouter(
-    prefix="/3d-model-generation",
-    tags=["Tasks"],
+integrations_router = APIRouter(
+    prefix="/integrations",
+    tags=["Integrations"],
 )
 
+mesh_generation_integrations_router = APIRouter(
+    prefix="/3d-model-generation",
+)
 
-@task_router.post(
+@mesh_generation_integrations_router.post(
     path="/tasks",
     description="Upload input image for generating 3d model",
     status_code=status.HTTP_201_CREATED,
@@ -36,22 +35,13 @@ task_router = APIRouter(
 )
 async def create_task(
     task_source_file: UploadFile,
-    access_token: str = Header(),
     task_controller: TaskController = Depends(TaskControllerImpl),
-    authorization_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
 ):
-    token_validation_result = await authorization_controller.validate_token(access_token, TokenType.ACCESS)
-    if token_validation_result.status_code != status.HTTP_200_OK:
-        raise HTTPException(
-            status_code=token_validation_result.status_code,
-            detail=token_validation_result.detail,
-        )
-
     try:
         task_response = await task_controller.create_task(
-            user_id=token_validation_result.token_payload.user_id,
+            user_id=None,
             input_file=task_source_file,
-            client_type=TaskClientType.WEB_SERVICE,
+            client_type=TaskClientType.EXTERNAL_INTEGRATION,
         )
     except Exception as e:
         logger.exception(e)
@@ -65,8 +55,7 @@ async def create_task(
         content=task_response.model_dump(),
     )
 
-
-@task_router.get(
+@mesh_generation_integrations_router.get(
     path="/tasks/{task_request_uuid}/status",
     description="Get task status",
     status_code=status.HTTP_200_OK,
@@ -75,17 +64,8 @@ async def create_task(
 )
 async def get_task_status(
     task_request_uuid: str,
-    access_token: str = Header(),
     task_controller: TaskController = Depends(TaskControllerImpl),
-    authorization_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
 ):
-    token_validation_result = await authorization_controller.validate_token(access_token, TokenType.ACCESS)
-    if token_validation_result.status_code != status.HTTP_200_OK:
-        raise HTTPException(
-            status_code=token_validation_result.status_code,
-            detail=token_validation_result.detail,
-        )
-
     try:
         task_status = await task_controller.get_task_status(
             task_request_uuid=uuid.UUID(task_request_uuid),
@@ -108,27 +88,16 @@ async def get_task_status(
         content=task_status.model_dump(),
     )
 
-
-@task_router.get(
+@mesh_generation_integrations_router.get(
     path="/tasks/{task_request_uuid}/result",
     description="Get task result as url to 3d model",
     status_code=status.HTTP_200_OK,
     response_model=GetTaskResultResponse,
-    response_description="Returns URL to S3 storage"
 )
 async def get_task_result(
     task_request_uuid: str,
-    access_token: str = Header(),
     task_controller: TaskController = Depends(TaskControllerImpl),
-    authorization_controller: AuthorizationController = Depends(AuthorizationControllerImpl),
 ):
-    token_validation_result = await authorization_controller.validate_token(access_token, TokenType.ACCESS)
-    if token_validation_result.status_code != status.HTTP_200_OK:
-        raise HTTPException(
-            status_code=token_validation_result.status_code,
-            detail=token_validation_result.detail,
-        )
-
     try:
         task_result = await task_controller.get_task_result(
             task_request_uuid=uuid.UUID(task_request_uuid),

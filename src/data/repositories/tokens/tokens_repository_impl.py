@@ -1,8 +1,9 @@
 import logging
 from typing import Optional
 
+from sqlalchemy import delete
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
 
 from src.data.database.connection import SessionProviderMixin
 from src.data.database.tables import TokenTable

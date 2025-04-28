@@ -1,5 +1,7 @@
 import logging
-from typing import BinaryIO, Optional, List
+from typing import BinaryIO
+from typing import List
+from typing import Optional
 
 from src.data.minio import MinioManager
 from src.data.repositories import MinioRepository

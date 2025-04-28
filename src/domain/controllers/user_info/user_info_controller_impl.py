@@ -1,16 +1,23 @@
-from typing import Optional, List
+from typing import List
+from typing import Optional
 
 from fastapi.params import Depends
 
-from src.data.repositories import MinioMetadataRepository, MinioMetadataRepositoryImpl
-from src.data.repositories import MinioRepository, MinioRepositoryImpl
-from src.data.repositories import TasksRepository, TasksRepositoryImpl
-from src.data.repositories import TokensRepository, TokensRepositoryImpl
-from src.data.repositories import UsersRepository, UsersRepositoryImpl
+from src.data.repositories import MinioMetadataRepository
+from src.data.repositories import MinioMetadataRepositoryImpl
+from src.data.repositories import MinioRepository
+from src.data.repositories import MinioRepositoryImpl
+from src.data.repositories import TasksRepository
+from src.data.repositories import TasksRepositoryImpl
+from src.data.repositories import TokensRepository
+from src.data.repositories import TokensRepositoryImpl
+from src.data.repositories import UsersRepository
+from src.data.repositories import UsersRepositoryImpl
 from src.domain.controllers.user_info.user_info_controller import UserInfoController
 from src.domain.entities import TokenType
-from src.presentation.responses import GetUserGenerationHistoryResponse, UserGenerationHistoryItem
+from src.presentation.responses import GetUserGenerationHistoryResponse
 from src.presentation.responses import GetUserProfileInfoResponse
+from src.presentation.responses import UserGenerationHistoryItem
 
 
 class UserInfoControllerImpl(UserInfoController):

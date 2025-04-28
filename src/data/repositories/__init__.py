@@ -1,3 +1,5 @@
+from src.data.repositories.mesh_metadata.mesh_metadata_repository import MeshMetadataRepository
+from src.data.repositories.mesh_metadata.mesh_metadata_repository_impl import MeshMetadataRepositoryImpl
 from src.data.repositories.minio.minio_repository import MinioRepository
 from src.data.repositories.minio.minio_repository_impl import MinioRepositoryImpl
 from src.data.repositories.minio_metadata.minio_metadata_repository import MinioMetadataRepository
@@ -24,4 +26,6 @@ __all__ = [
     "UsersRepositoryImpl",
     "TokensRepository",
     "TokensRepositoryImpl",
+    "MeshMetadataRepository",
+    "MeshMetadataRepositoryImpl",
 ]

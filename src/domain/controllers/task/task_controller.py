@@ -1,9 +1,11 @@
 import uuid
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from typing import Optional
 
 from fastapi import UploadFile
 
+from src.domain.entities import TaskClientType
 from src.presentation.responses import CreateTaskResponse
 from src.presentation.responses import GetTaskResultResponse
 from src.presentation.responses import GetTaskStatusResponse
@@ -28,7 +30,8 @@ class TaskController(ABC):
     @abstractmethod
     async def create_task(
         self,
-        user_id: int,
+        user_id: Optional[int],
         input_file: UploadFile,
+        client_type: TaskClientType,
     ) -> CreateTaskResponse:
         raise NotImplementedError

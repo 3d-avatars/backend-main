@@ -1,6 +1,8 @@
 import uuid
-from abc import ABC, abstractmethod
-from typing import List, Optional
+from abc import ABC
+from abc import abstractmethod
+from typing import List
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

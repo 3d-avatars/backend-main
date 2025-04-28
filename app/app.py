@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
 from src.presentation.routes import get_apps_router
-from src.data.queue.amqp_channel_manager import AMQPChannelManager
+from src.data.message_broker.amqp_channel_manager import AMQPChannelManager
 
 settings = get_settings()
 

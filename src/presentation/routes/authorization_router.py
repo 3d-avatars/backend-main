@@ -1,10 +1,14 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 from fastapi.params import Header
 from starlette.responses import JSONResponse
 
-from src.domain.controllers import AuthorizationController, AuthorizationControllerImpl
+from src.domain.controllers import AuthorizationController
+from src.domain.controllers import AuthorizationControllerImpl
 from src.presentation.requests import RegistrationRequestBody
 from src.presentation.requests.authorization.authorization_request_body import AuthorizationRequestBody
 from src.presentation.responses import RegistrationResponse
@@ -81,7 +85,7 @@ async def authorization(
 
 @authorization_router.get(
     path="/refresh-token",
-    description="Refresh user's Access Token with Refresh Token",
+    description="Create new user's Access Token with Refresh Token",
     status_code=status.HTTP_200_OK,
     response_model=TokenPairResponse,
 )
