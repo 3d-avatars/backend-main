@@ -37,6 +37,12 @@ async def create_task(
     task_source_file: UploadFile,
     task_controller: TaskController = Depends(TaskControllerImpl),
 ):
+    if "image" not in task_source_file.content_type:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Only image files are accepted"
+        )
+
     try:
         task_response = await task_controller.create_task(
             user_id=None,

@@ -47,13 +47,13 @@ async def create_task(
             detail=token_validation_result.detail,
         )
 
-    try:
-        if "image" not in task_source_file.content_type:
-            raise HTTPException(
-                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                detail="Only image files are accepted"
-            )
+    if "image" not in task_source_file.content_type:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Only image files are accepted"
+        )
 
+    try:
         task_response = await task_controller.create_task(
             user_id=token_validation_result.token_payload.user_id,
             input_file=task_source_file,
