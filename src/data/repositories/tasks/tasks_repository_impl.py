@@ -3,7 +3,9 @@ import uuid
 from typing import List
 from typing import Optional
 
+from sqlalchemy import and_
 from sqlalchemy import delete
+from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.data.database.connection.session_provider_mixin import SessionProviderMixin
 from src.data.database.tables.task_table import TaskTable
 from src.data.repositories import TasksRepository
+from src.domain.entities import TaskStatus
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +41,25 @@ class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
         session: AsyncSession = None,
     ) -> List[TaskTable]:
         task_query = select(TaskTable).where(TaskTable.user_id == user_id)
+        result = list(
+            (await session.execute(task_query)).scalars().all()
+        )
+        await session.commit()
+
+        logger.info(f"Selected tasks {result}")
+        return result
+
+    @SessionProviderMixin.session_provider
+    async def get_completed_tasks_by_user_id(
+        self,
+        user_id: int,
+        session: AsyncSession = None,
+    ) -> List[TaskTable]:
+        task_query = select(TaskTable).where(
+            TaskTable.user_id == user_id,
+            TaskTable.status != TaskStatus.FAILED,
+            TaskTable.status != TaskStatus.INVALID_INPUT,
+        )
         result = list(
             (await session.execute(task_query)).scalars().all()
         )
