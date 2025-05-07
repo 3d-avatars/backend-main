@@ -14,19 +14,33 @@ from src.domain.controllers import UserInfoControllerImpl
 from src.domain.entities import TokenType
 from src.presentation.responses import GetUserGenerationHistoryResponse
 from src.presentation.responses import GetUserProfileInfoResponse
+from src.utils.http_constants import HTTP_CODE_401_MESSAGE
+from src.utils.http_constants import HTTP_CODE_403_MESSAGE
+from src.utils.http_constants import HTTP_CODE_500_MESSAGE
 
 logger = logging.getLogger(__name__)
+
+USER_HISTORY_404_MESSAGE = "Did not find history for this user"
+USER_INFO_404_MESSAGE = "Did not find personal info for this user"
 
 user_info_router = APIRouter(
     prefix="/user-info",
     tags=["User Info"],
+    responses={
+        401: { "description": HTTP_CODE_401_MESSAGE },
+        403: { "description": HTTP_CODE_403_MESSAGE },
+    }
 )
+
 
 @user_info_router.get(
     path="/generation-history",
     description="Get history of user's generation tasks",
     status_code=status.HTTP_200_OK,
     response_model=GetUserGenerationHistoryResponse,
+    responses={
+        404: { "description": USER_HISTORY_404_MESSAGE },
+    },
 )
 async def get_user_generation_history(
     access_token: str = Header(),
@@ -48,13 +62,13 @@ async def get_user_generation_history(
         logger.exception(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Something went wrong",
+            detail=HTTP_CODE_500_MESSAGE,
         )
 
     if generation_history_response is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Didnt find history for this user"
+            detail=USER_HISTORY_404_MESSAGE,
         )
 
     return JSONResponse(
@@ -67,6 +81,9 @@ async def get_user_generation_history(
     description="Get user profile info",
     status_code=status.HTTP_200_OK,
     response_model=GetUserProfileInfoResponse,
+    responses={
+        404: { "description": USER_INFO_404_MESSAGE }
+    },
 )
 async def get_user_profile_info(
     access_token: str = Header(),
@@ -88,13 +105,13 @@ async def get_user_profile_info(
         logger.exception(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Something went wrong",
+            detail=HTTP_CODE_500_MESSAGE,
         )
 
     if user_profile_info_response is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Didnt find history for this user"
+            detail=USER_INFO_404_MESSAGE,
         )
 
     return JSONResponse(

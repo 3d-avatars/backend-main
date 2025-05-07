@@ -22,6 +22,8 @@ from src.domain.entities import TokenType
 from src.presentation.responses import RegistrationResponse
 from src.presentation.responses import TokenPairResponse
 from src.presentation.responses import TokenValidationResponse
+from src.utils.http_constants import HTTP_CODE_401_MESSAGE
+from src.utils.http_constants import HTTP_CODE_403_MESSAGE
 
 logger = logging.getLogger(__name__)
 
@@ -151,21 +153,21 @@ class AuthorizationControllerImpl(AuthorizationController):
 
                 return TokenValidationResponse(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token expired",
+                    detail=HTTP_CODE_401_MESSAGE,
                 )
 
         except Exception as e:
             logger.exception(e)
             return TokenValidationResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Failed to validate the token",
+                detail=HTTP_CODE_403_MESSAGE,
             )
 
         user = await self.users_repository.get_user_by_email(token_payload.user_email)
         if user is None:
             return TokenValidationResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid token",
+                detail=HTTP_CODE_403_MESSAGE,
             )
 
         user_id = await self.tokens_repository.get_user_id_by_token(
@@ -176,7 +178,7 @@ class AuthorizationControllerImpl(AuthorizationController):
         if user_id is None or user.id != user_id:
             return TokenValidationResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid token",
+                detail=HTTP_CODE_403_MESSAGE,
             )
 
         return TokenValidationResponse(
