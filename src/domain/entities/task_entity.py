@@ -30,6 +30,7 @@ class TaskStatus(str, LruCachedEnum):
     PENDING = "PENDING",
     IN_PROGRESS = "IN_PROGRESS",
     SUCCESS = "SUCCESS",
+    INVALID_INPUT = "INVALID_INPUT",
     FAILED = "FAILED",
 
 class TaskProgressEntity(BaseModel):
