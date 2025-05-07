@@ -1,6 +1,8 @@
 import logging
 import uuid
+from io import BytesIO
 
+from PIL import Image
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -62,7 +64,12 @@ async def create_task(
             detail=token_validation_result.detail,
         )
 
-    if "image" not in task_source_file.content_type:
+    try:
+        image = Image.open(task_source_file.file)
+        image.verify()
+        task_source_file.file.seek(0)
+    except Exception as e:
+        logger.exception(e)
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail=TASK_415_MESSAGE,
