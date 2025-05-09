@@ -1,5 +1,6 @@
 from logging.config import fileConfig
 
+import alembic_postgresql_enum
 from alembic import context
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool

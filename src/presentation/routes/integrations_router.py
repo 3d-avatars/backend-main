@@ -1,6 +1,8 @@
 import logging
 import uuid
+from io import BytesIO
 
+from PIL import Image
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -15,8 +17,13 @@ from src.domain.entities import TaskStatus
 from src.presentation.responses import CreateTaskResponse
 from src.presentation.responses import GetTaskResultResponse
 from src.presentation.responses import GetTaskStatusResponse
+from src.utils.http_constants import HTTP_CODE_500_MESSAGE
 
 logger = logging.getLogger(__name__)
+
+INTEGRATIONS_415_MESSAGE = "Only image files are accepted"
+INTEGRATIONS_TASK_STATUS_404_MESSAGE = "The task with specified request uuid was not found"
+INTEGRATIONS_TASK_RESULT_404_MESSAGE = "The task result with specified request uuid not found"
 
 integrations_router = APIRouter(
     prefix="/integrations",
@@ -27,16 +34,31 @@ mesh_generation_integrations_router = APIRouter(
     prefix="/3d-model-generation",
 )
 
+
 @mesh_generation_integrations_router.post(
     path="/tasks",
     description="Upload input image for generating 3d model",
     status_code=status.HTTP_201_CREATED,
     response_model=CreateTaskResponse,
+    responses={
+        415: { "description": INTEGRATIONS_415_MESSAGE },
+    },
 )
 async def create_task(
     task_source_file: UploadFile,
     task_controller: TaskController = Depends(TaskControllerImpl),
 ):
+    try:
+        image = Image.open(task_source_file.file)
+        image.verify()
+        task_source_file.file.seek(0)
+    except Exception as e:
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=INTEGRATIONS_415_MESSAGE,
+        )
+
     try:
         task_response = await task_controller.create_task(
             user_id=None,
@@ -47,7 +69,7 @@ async def create_task(
         logger.exception(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Something went wrong",
+            detail=HTTP_CODE_500_MESSAGE,
         )
 
     return JSONResponse(
@@ -60,7 +82,10 @@ async def create_task(
     description="Get task status",
     status_code=status.HTTP_200_OK,
     response_model=GetTaskStatusResponse,
-    response_description=f"Possible status values: {list(map(str, TaskStatus.values()))}"
+    response_description=f"Possible status values: {list(map(str, TaskStatus.values()))}",
+    responses={
+        404: { "description": INTEGRATIONS_TASK_STATUS_404_MESSAGE },
+    },
 )
 async def get_task_status(
     task_request_uuid: str,
@@ -74,13 +99,13 @@ async def get_task_status(
         logger.exception(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Something went wrong"
+            detail=HTTP_CODE_500_MESSAGE,
         )
 
     if task_status is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"The task with request uuid {task_request_uuid} not found",
+            detail=f"The task with request uuid {task_request_uuid} was not found",
         )
 
     return JSONResponse(
@@ -93,6 +118,10 @@ async def get_task_status(
     description="Get task result as url to 3d model",
     status_code=status.HTTP_200_OK,
     response_model=GetTaskResultResponse,
+    response_description="Returns URL to S3 storage",
+    responses={
+        404: { "description": INTEGRATIONS_TASK_RESULT_404_MESSAGE },
+    },
 )
 async def get_task_result(
     task_request_uuid: str,
@@ -106,7 +135,7 @@ async def get_task_result(
         logger.exception(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Something went wrong"
+            detail=HTTP_CODE_500_MESSAGE,
         )
 
     if task_result is None:

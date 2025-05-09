@@ -50,6 +50,7 @@ class AMQPChannelManager:
         )
 
         async with self._connection.channel() as declare_channel:
+            await declare_channel.set_qos(prefetch_count=1)
             await declare_channel.declare_queue(
                 name=settings.RABBITMQ_TASKS_QUEUE,
             )

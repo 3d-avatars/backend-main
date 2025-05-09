@@ -49,7 +49,7 @@ class UserInfoControllerImpl(UserInfoController):
         if user is None:
             return None
 
-        tasks_history = await self.tasks_repository.get_tasks_by_user_id(user_id)
+        tasks_history = await self.tasks_repository.get_completed_tasks_by_user_id(user_id)
 
         history_items: List[UserGenerationHistoryItem] = []
 
