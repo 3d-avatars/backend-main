@@ -3,9 +3,7 @@ import uuid
 from typing import List
 from typing import Optional
 
-from sqlalchemy import and_
 from sqlalchemy import delete
-from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession

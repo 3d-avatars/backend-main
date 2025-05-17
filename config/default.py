@@ -30,8 +30,6 @@ class DefaultSettings(BaseSettings):
     POSTGRES_USER: str = environ.get("POSTGRES_USER", "user")
     POSTGRES_PORT: int = int(environ.get("POSTGRES_PORT", "5432")[-4:])
     POSTGRES_PASSWORD: str = environ.get("POSTGRES_PASSWORD", "hackme")
-    DB_CONNECT_RETRY: int = environ.get("DB_CONNECT_RETRY", 20)
-    DB_POOL_SIZE: int = environ.get("DB_POOL_SIZE", 15)
 
     #Minio
     MINIO_HOST: str = environ.get("MINIO_HOST", "minio")

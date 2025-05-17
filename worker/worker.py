@@ -3,9 +3,9 @@ import logging
 
 from aio_pika.abc import AbstractIncomingMessage
 from pydantic import ValidationError
-from src.data.message_broker import AMQPChannelManager
 
 from config import get_settings
+from src.data.message_broker import AMQPChannelManager
 from src.data.repositories import MeshMetadataRepository
 from src.data.repositories import MeshMetadataRepositoryImpl
 from src.data.repositories import MinioMetadataRepository
@@ -27,10 +27,11 @@ class Worker:
         self.mesh_metadata_repository: MeshMetadataRepository = MeshMetadataRepositoryImpl()
 
     async def run(self):
-        await self.channel_manager.refresh()
-
         async with self.channel_manager.get_channel() as channel:
-            queue = await channel.declare_queue(get_settings().RABBITMQ_TASKS_RESULTS_QUEUE)
+            queue = await channel.declare_queue(
+                name=get_settings().RABBITMQ_TASKS_RESULTS_QUEUE,
+                durable=True,
+            )
 
             try:
                 await queue.consume(self.handle_task_callback, no_ack=False)
