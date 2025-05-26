@@ -1,0 +1,12 @@
+---
+- name: Remove temporary SSH file
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_files:
+    - ../ansible_vault.yml
+  tasks:
+    - name: Remove temporary SSH key file
+      file:
+        path: "{{ ssh_private_key_file }}"
+        state: absent
