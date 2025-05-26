@@ -1,0 +1,57 @@
+---
+- name: Deploy with docker-compose
+  hosts: worker_hosts
+  become: yes
+  vars_files:
+    - ../ansible_vault.yml
+  vars:
+    app_dir: /opt/ml-worker
+    registry_user: "{{ lookup('env', 'DOCKER_HUB_USER') }}"
+    registry_password: "{{ lookup('env', 'DOCKER_HUB_TOKEN') }}"
+#    registry_user: "{{ lookup('env', 'CI_REGISTRY_USER') }}"
+#    registry_password: "{{ lookup('env', 'CI_REGISTRY_PASSWORD') }}"
+#    registry: "{{ lookup('env', 'CI_REGISTRY') }}"
+    image_tag: "{{ lookup('env', 'IMAGE_TAG') }}"
+
+  tasks:
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy docker-compose.yml file
+      copy:
+        src: ../../docker-compose-ci.yml
+        dest: "{{ app_dir }}/docker-compose.yml"
+        mode: '0644'
+
+    - name: Create .env file with IMAGE_TAG
+      copy:
+        dest: "{{ app_dir }}/.env"
+        content: "IMAGE_TAG={{ image_tag }}"
+        mode: '0644'
+
+    - name: Docker login
+      community.docker.docker_login:
+#        registry: "{{ registry }}"
+        username: "{{ registry_user }}"
+        password: "{{ registry_password }}"
+        reauthorize: yes
+
+    - name: Deploy with Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_dir }}"
+        state: present
+        pull: missing
+        build: always
+        remove_orphans: true
+
+    - name: Get current containers
+      command: docker ps -a
+      register: docker_ps
+      changed_when: false
+
+    - name: Show current containers
+      debug:
+        var: docker_ps.stdout_lines
