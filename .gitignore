@@ -8,3 +8,6 @@ venv
 
 .DS_Store
 __pycache__
+
+deployment/ansible/vault_secrets.yml
+deployment/ansible/.vault_password
