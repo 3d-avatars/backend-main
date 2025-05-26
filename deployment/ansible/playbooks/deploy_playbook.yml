@@ -1,17 +1,16 @@
 ---
 - name: Deploy with docker-compose
-  hosts: worker_hosts
+  hosts: backend_hosts
   become: yes
   vars_files:
     - ../ansible_vault.yml
   vars:
-    app_dir: /opt/ml-worker
+    app_dir: /opt/backend-main
     registry_user: "{{ lookup('env', 'DOCKER_HUB_USER') }}"
     registry_password: "{{ lookup('env', 'DOCKER_HUB_TOKEN') }}"
 #    registry_user: "{{ lookup('env', 'CI_REGISTRY_USER') }}"
 #    registry_password: "{{ lookup('env', 'CI_REGISTRY_PASSWORD') }}"
 #    registry: "{{ lookup('env', 'CI_REGISTRY') }}"
-    image_tag: "{{ lookup('env', 'IMAGE_TAG') }}"
 
   tasks:
     - name: Create application directory
@@ -26,10 +25,10 @@
         dest: "{{ app_dir }}/docker-compose.yml"
         mode: '0644'
 
-    - name: Create .env file with IMAGE_TAG
+    - name: Copy .env file
       copy:
+        src: ../.env
         dest: "{{ app_dir }}/.env"
-        content: "IMAGE_TAG={{ image_tag }}"
         mode: '0644'
 
     - name: Docker login

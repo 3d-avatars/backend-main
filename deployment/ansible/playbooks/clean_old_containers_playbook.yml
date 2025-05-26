@@ -1,6 +1,6 @@
 ---
 - name: Deploy with docker-compose
-  hosts: worker_hosts
+  hosts: backend_hosts
   become: yes
   vars_files:
     - ../ansible_vault.yml

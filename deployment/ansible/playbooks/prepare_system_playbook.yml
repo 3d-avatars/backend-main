@@ -1,6 +1,6 @@
 ---
 - name: Prepare system
-  hosts: worker_hosts
+  hosts: backend_hosts
   become: yes
   vars:
     venv_path: /opt/docker_venv
