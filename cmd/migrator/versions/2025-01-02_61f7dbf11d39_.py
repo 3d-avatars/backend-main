@@ -37,9 +37,10 @@ def upgrade():
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('hashed_password')
     )
+    taskstatus = postgresql.ENUM('INITIAL', 'PENDING', 'IN_PROGRESS', 'SUCCESS', 'FAILED', name='taskstatus')
     op.create_table('task',
     sa.Column('request_uuid', sa.UUID(), nullable=False),
-    sa.Column('status', sa.Enum('INITIAL', 'PENDING', 'IN_PROGRESS', 'SUCCESS', 'FAILED', name='taskstatus'), nullable=False),
+    sa.Column('status', taskstatus, nullable=False),
     sa.Column('user_id', sa.BIGINT(), nullable=False),
     sa.Column('source_file_metadata_id', sa.BIGINT(), nullable=False),
     sa.Column('result_file_metadata_id', sa.BIGINT(), nullable=True),
@@ -63,4 +64,5 @@ def downgrade():
     op.drop_table('task')
     op.drop_table('user')
     op.drop_table('minio_metadata')
+    postgresql.ENUM('INITIAL', 'PENDING', 'IN_PROGRESS', 'SUCCESS', 'FAILED', name='taskstatus').drop(op.get_bind(), checkfirst=False)
     # ### end Alembic commands ###

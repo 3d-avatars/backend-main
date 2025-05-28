@@ -19,9 +19,10 @@ depends_on = None
 def upgrade():
     op.drop_table('task')
     sa.Enum('INITIAL', 'PENDING', 'IN_PROGRESS', 'SUCCESS', 'FAILED', name='taskstatus').drop(op.get_bind(), checkfirst=False)
+    postgresql.ENUM('INITIAL', 'PENDING', 'IN_PROGRESS', 'SUCCESS', 'FAILED', name='taskstatus').create(op.get_bind())
     op.create_table('task',
     sa.Column('request_uuid', sa.UUID(), nullable=False),
-    sa.Column('status', sa.Enum('INITIAL', 'PENDING', 'IN_PROGRESS', 'SUCCESS', 'FAILED', name='taskstatus'), nullable=False),
+    sa.Column('status', postgresql.ENUM('INITIAL', 'PENDING', 'IN_PROGRESS', 'SUCCESS', 'FAILED', name='taskstatus'), nullable=False),
     sa.Column('user_id', sa.BIGINT(), nullable=False),
     sa.Column('input_file_metadata_id', sa.BIGINT(), nullable=False),
     sa.Column('result_file_metadata_id', sa.BIGINT(), nullable=True),
