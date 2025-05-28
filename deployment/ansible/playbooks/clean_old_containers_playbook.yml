@@ -1,0 +1,63 @@
+---
+- name: Deploy with docker-compose
+  hosts: backend_hosts
+  become: yes
+  vars_files:
+    - ../ansible_vault.yml
+  vars:
+    image_tag: "{{ lookup('env', 'IMAGE_TAG') }}"
+
+  tasks:
+    - name: Get info about all Docker containers
+      community.docker.docker_host_info:
+        containers: true
+        containers_all: true
+      register: docker_host_info
+
+    - name: Set the current image base name
+      set_fact:
+        current_image_base: "{{ image_tag | regex_replace(':[^:]*$', '') }}"
+
+    - name: Find old containers using the same base image but different tag
+      set_fact:
+        containers_to_remove: "{{ containers_to_remove | default([]) + [item] }}"
+      loop: "{{ docker_host_info.containers }}"
+      when:
+        - item.Image != image_tag
+        - item.Image is regex(current_image_base + ':.*')
+
+    - name: Display containers to be removed
+      debug:
+        msg: "Will remove container: {{ item.Name }} (Image: {{ item.Image }})"
+      loop: "{{ containers_to_remove | default([]) }}"
+      when: containers_to_remove is defined and containers_to_remove | length > 0
+
+#    - name: Stop old containers
+#      community.docker.docker_container:
+#        name: "{{ item.Name }}"
+#        state: stopped
+#      loop: "{{ containers_to_remove | default([]) }}"
+#      when: containers_to_remove is defined and containers_to_remove | length > 0
+#
+#    - name: Remove old containers
+#      community.docker.docker_container:
+#        name: "{{ item.Name }}"
+#        state: absent
+#        force_kill: yes
+#      loop: "{{ containers_to_remove | default([]) }}"
+#      when: containers_to_remove is defined and containers_to_remove | length > 0
+
+    - name: Get current containers after cleanup
+      command: docker ps -a
+      register: docker_ps_after
+      changed_when: false
+
+    - name: Show current containers
+      debug:
+        var: docker_ps_after.stdout_lines
+
+    - name: Prune unused Docker images
+      community.docker.docker_prune:
+        images: yes
+        images_filters:
+          dangling: true

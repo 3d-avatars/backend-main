@@ -1,0 +1,84 @@
+stages:
+  - build
+  - deploy
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+
+variables:
+#  IMAGE_TAG: lostimagin4tion/3d-avatar-backend-main:danilov6083-backend-10
+  IMAGE_TAG: $DOCKER_HUB_USER/3d-avatar-backend-main:$CI_COMMIT_REF_SLUG
+  IMAGE_LATEST_TAG: 3d-avatar/backend-main:latest
+
+build_image:
+  stage: build
+  image: docker:20.10
+  services:
+    - docker:20.10-dind
+  tags:
+    - 3d-avatar-runner
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == "main"
+#      when: on_success
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    RUNNER_SCRIPT_TIMEOUT: 2h
+  script: |
+    df -h
+    #echo "CI_REGISTRY_USER ${DOCKER_HUB_USER} PASSWORD ${DOCKER_HUB_TOKEN} REGISTRY ${CI_REGISTRY}"
+    echo "CI_REGISTRY_USER ${DOCKER_HUB_USER} PASSWORD ${DOCKER_HUB_TOKEN}"
+    echo "DOCKER IMAGE TAG ${IMAGE_TAG}"
+
+    #docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_TOKEN
+
+    cp $PYTHON_ENV .env
+
+    docker build . --network=host --tag $IMAGE_TAG --file deployment/Dockerfile
+    docker image ls
+    docker push $IMAGE_TAG
+
+    if [ "$CI_COMMIT_BRANCH" = "main" ];
+    then 
+      docker tag $IMAGE_TAG $IMAGE_LATEST_TAG; 
+      docker push $IMAGE_LATEST_TAG;
+    fi
+
+deploy_image:
+  stage: deploy
+  image: willhallonline/ansible:2.16-ubuntu-22.04
+  tags:
+    - 3d-avatar-runner
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == "main"
+#      when: on_success
+  needs:
+    - build_image
+  script: |
+    ansible-galaxy collection install community.docker
+    apt-get install make
+    
+    python3 -m pip install -r requirements-ci.txt
+
+    cd deployment/ansible
+
+    export ANSIBLE_CONFIG=ansible.cfg
+
+    echo $VAULT_PASSWORD > .vault_password
+    chmod 600 .vault_password
+
+    cp $PYTHON_ENV .env
+    echo -e "\n\nIMAGE_TAG=$IMAGE_TAG" >> .env
+
+    ansible-playbook main.yml
+
+    rm .vault_password
+
+    # apply database migrations
+    set -o allexport
+    source .env
+    set +o allexport
+
+    cd ../..
+    make migrate

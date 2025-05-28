@@ -15,7 +15,7 @@ config = context.config
 section = config.config_ini_section
 settings = get_settings()
 config.set_section_option(section, "POSTGRES_DB", settings.POSTGRES_DB)
-config.set_section_option(section, "POSTGRES_HOST_FOR_MIGRATIONS", settings.POSTGRES_HOST_FOR_MIGRATIONS)
+config.set_section_option(section, "POSTGRES_HOST", settings.POSTGRES_HOST)
 config.set_section_option(section, "POSTGRES_USER", settings.POSTGRES_USER)
 config.set_section_option(section, "POSTGRES_PASSWORD", settings.POSTGRES_PASSWORD)
 config.set_section_option(section, "POSTGRES_PORT", str(settings.POSTGRES_PORT))

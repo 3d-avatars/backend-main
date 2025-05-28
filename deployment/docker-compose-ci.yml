@@ -52,9 +52,7 @@ services:
       - rabbitmq-data:/var/lib/rabbitmq
 
   main-service:
-    build:
-      context: ..
-      dockerfile: ./deployment/Dockerfile
+    image: ${IMAGE_TAG}
     env_file:
       - ./.env
     depends_on:
@@ -64,15 +62,11 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_started
-    volumes:
-      - ../.:/app
     ports:
       - "${APP_PORT}:${APP_PORT}"
 
   api-worker:
-    build:
-      context: ..
-      dockerfile: ./deployment/Dockerfile
+    image: ${IMAGE_TAG}
     env_file:
       - ./.env
     depends_on:
@@ -80,8 +74,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    volumes:
-      - ../.:/app
     command: ["python", "/app/cmd/worker/main.py"]
 
 

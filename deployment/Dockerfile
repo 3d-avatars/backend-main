@@ -11,4 +11,4 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-CMD ["python3", "cmd/service/main.py"]
+CMD ["python", "/app/cmd/service/main.py"]

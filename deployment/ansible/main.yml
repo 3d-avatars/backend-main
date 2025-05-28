@@ -1,0 +1,10 @@
+---
+- import_playbook: playbooks/setup_ssh_playbook.yml
+
+- import_playbook: playbooks/prepare_system_playbook.yml
+
+- import_playbook: playbooks/deploy_playbook.yml
+
+- import_playbook: playbooks/clean_old_containers_playbook.yml
+
+- import_playbook: playbooks/remove_ssh_playbook.yml
