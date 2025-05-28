@@ -11,7 +11,6 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-    hostname: ${POSTGRES_HOST}
     ports:
       - '${POSTGRES_PORT}:${POSTGRES_PORT}'
     volumes:
@@ -23,7 +22,6 @@ services:
     restart: on-failure
     env_file:
       - ./.env
-    hostname: ${MINIO_HOST}
     healthcheck:
       test: mc ready local
       interval: 5s
@@ -41,7 +39,7 @@ services:
     restart: on-failure
     env_file:
       - ./.env
-    hostname: ${RABBITMQ_HOST}
+    hostname: rabbitmq
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 15s
@@ -84,7 +82,7 @@ services:
         condition: service_healthy
     volumes:
       - ../.:/app
-    command: ["python3", "/app/cmd/worker/main.py"]
+    command: ["python", "/app/cmd/worker/main.py"]
 
 
 volumes:

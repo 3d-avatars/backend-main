@@ -61,7 +61,7 @@ deploy_image:
     - chmod 600 .vault_password
 
     - cp $PYTHON_ENV .env
-    - echo -e "\nIMAGE_TAG=$IMAGE_TAG" >> .env
+    - echo -e "\n\nIMAGE_TAG=$IMAGE_TAG" >> .env
 
     - ansible-playbook main.yml
 
