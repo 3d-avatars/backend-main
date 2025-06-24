@@ -1,0 +1,147 @@
+import logging
+import uuid
+from typing import List
+from typing import Optional
+
+from sqlalchemy import delete
+from sqlalchemy import select
+from sqlalchemy import update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.data.database.connection.session_provider_mixin import SessionProviderMixin
+from src.data.database.tables.task_table import TaskTable
+from src.data.repositories import TasksRepository
+from src.domain.entities import TaskStatus
+
+logger = logging.getLogger(__name__)
+
+
+class TasksRepositoryImpl(TasksRepository, SessionProviderMixin):
+
+    @SessionProviderMixin.session_provider
+    async def get_tasks(
+        self,
+        session: AsyncSession = None,
+    ) -> List[TaskTable]:
+        task_query = select(TaskTable)
+        result = list(
+            (await session.execute(task_query)).scalars().all()
+        )
+        await session.commit()
+
+        logger.info(f"Selected tasks {result}")
+        return result
+
+    @SessionProviderMixin.session_provider
+    async def get_tasks_by_user_id(
+        self,
+        user_id: int,
+        session: AsyncSession = None,
+    ) -> List[TaskTable]:
+        task_query = select(TaskTable).where(TaskTable.user_id == user_id)
+        result = list(
+            (await session.execute(task_query)).scalars().all()
+        )
+        await session.commit()
+
+        logger.info(f"Selected tasks {result}")
+        return result
+
+    @SessionProviderMixin.session_provider
+    async def get_completed_tasks_by_user_id(
+        self,
+        user_id: int,
+        session: AsyncSession = None,
+    ) -> List[TaskTable]:
+        task_query = select(TaskTable).where(
+            TaskTable.user_id == user_id,
+            TaskTable.status != TaskStatus.FAILED,
+            TaskTable.status != TaskStatus.INVALID_INPUT,
+        )
+        result = list(
+            (await session.execute(task_query)).scalars().all()
+        )
+        await session.commit()
+
+        logger.info(f"Selected tasks {result}")
+        return result
+
+    @SessionProviderMixin.session_provider
+    async def get_first_task_of_user(
+        self,
+        user_id: int,
+        session: AsyncSession = None,
+    ) -> Optional[TaskTable]:
+        task_query = select(TaskTable).where(TaskTable.user_id == user_id).limit(1)
+        result: Optional[TaskTable] = (await session.execute(task_query)).scalar()
+
+        await session.commit()
+
+        logger.info(f"Selected task {result}")
+        return result
+
+
+    @SessionProviderMixin.session_provider
+    async def get_task_by_request_uuid(
+        self,
+        request_uuid: uuid.UUID,
+        session: AsyncSession = None
+    ) -> Optional[TaskTable]:
+        task_query = select(TaskTable).where(TaskTable.request_uuid == request_uuid)
+        result: Optional[TaskTable] = (await session.execute(task_query)).scalar()
+
+        await session.commit()
+
+        logger.info(f"Selected task {result}")
+        return result
+
+    @SessionProviderMixin.session_provider
+    async def create_task(
+        self,
+        task: TaskTable,
+        session: AsyncSession = None,
+    ) -> TaskTable:
+        session.add(task)
+        await session.commit()
+
+        logger.info(f"Created task {task}")
+        return task
+
+    @SessionProviderMixin.session_provider
+    async def update_task(
+        self,
+        request_uuid: uuid.UUID,
+        session: AsyncSession = None,
+        **update_task_kwargs,
+    ) -> Optional[TaskTable]:
+        query = update(TaskTable).where(
+            TaskTable.request_uuid == request_uuid,
+        ).values(
+            **update_task_kwargs,
+        ).returning(TaskTable)
+
+        update_result: Optional[TaskTable] = (await session.execute(query)).scalar()
+        await session.commit()
+
+        logger.info(f"Updated task {update_result}")
+        return update_result
+
+    @SessionProviderMixin.session_provider
+    async def delete_task(
+        self,
+        request_uuid: uuid.UUID,
+        session: AsyncSession = None,
+    ) -> Optional[TaskTable]:
+        result = self.get_task_by_request_uuid(request_uuid)
+        if result is None:
+            return None
+
+        query = delete(TaskTable).where(
+            TaskTable.request_uuid == request_uuid
+        ).returning(TaskTable)
+
+        delete_result: Optional[TaskTable] = (await session.execute(query)).scalar()
+        await session.commit()
+
+        logger.info(f"Deleted task {delete_result}")
+        return delete_result
